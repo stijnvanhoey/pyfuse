@@ -6,3 +6,7 @@
 *.pdf
 *.exe
 *.py[cod]
+
+Makefile
+make.bat
+docs/build
