@@ -1,0 +1,8 @@
+# extensions to ignore #
+#######################
+*.pyc
+*.hdf5
+*.png
+*.pdf
+*.exe
+*.py[cod]
