@@ -206,6 +206,8 @@ class pyFUSE_Model():
         #MINI number to make sure some variables are never zero or below
         self.xmini=1e-6
 
+        self.ode_integrator = 'odeint'
+        self._use_odespy = False
 
     def check_impossible_options(self):
         '''
@@ -910,6 +912,24 @@ class pyFUSE_Model():
     def get_list_ode_integrators(self):
         return odespy.solvers.list_available_solvers()
 
+    def set_solver(self, solver):
+        """select solver to numerically solve the model
+        """
+        if odespy_import:
+            if not solver in odespy.solvers.list_available_solvers():
+                raise Exception(
+                    """
+                    Selected solver not available, see an
+                    overview of available solvers with the
+                    get_list_ode_integrators function
+                    """)
+            else:
+                self.ode_integrator = solver
+                self._use_odespy = True
+        else:
+            print 'odespy not available, using scipy.odeint implementation'
+            self.ode_integrator = 'odeint'
+            self._use_odespy = False
 
     def run(self,custom_period=None,new_pars=False,run_id='testrun'):
         '''
@@ -992,15 +1012,13 @@ class pyFUSE_Model():
         #----------------------------------------------------------------------
         #Solve with LSODA scheme -> odeint
         # more freedom in the solver method needed, but for the first version, odeint is ok
+        # http://hplgit.github.io/odespy/doc/api/odespy.html
         #----------------------------------------------------------------------
         print 'Model simulation started...'
         print ' '
 
-        #odespy solvers
-        use_odespy = True
-        self.ode_integrator = 'RK4'
-
-        if use_odespy and odespy_import:
+        # solvers
+        if self._use_odespy and odespy_import:
             solver = eval("odespy." + self.ode_integrator + "(self.deriv_mod)")
             solver.set_initial_condition(self.INIT)
             solver.set(f_args = (self.rain_int, self.evapo_int,
@@ -1008,13 +1026,15 @@ class pyFUSE_Model():
             state_out, t = solver.solve(self.time)
             infodict = 'odespy does not support convergence infodict'
 
-            print 'Using' + solver.quick_description + 'solver'
+            print 'Using ' + solver.quick_description + 'solver'
 
-        else:
+        elif self.ode_integrator == 'odeint':
             state_out, infodict = odeint(self.deriv_mod, self.INIT, self.time,
                                         full_output=1, printmessg=True,
                                         args=(self.rain_int, self.evapo_int,
                                               self.PARS,self.OPTIONS), hmax=1.0)
+        else:
+            raise Exception('Current solver setting not functional!')
 
      # ODESPY stijl: solver = eval("odespy." + self.ode_integrator + "(self._fun_ODE)")
      # https://github.ugent.be/biomath/biointense/blob/master/biointense/ode_generator.py  lijn 1057

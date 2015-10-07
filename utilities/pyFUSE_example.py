@@ -40,6 +40,7 @@ tmod = pf.pyFUSE_Model('mdtt.hdf5', topt, tpar, rain, evapo, tcnt)
 # Run the model
 ###########################################################
 
+tmod.set_solver('MidpointImplicit')
 tmod.run(run_id='optimized')
 
 #tmod.close_h5()
