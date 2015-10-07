@@ -43,7 +43,7 @@ from pyFUSE.parameter import *
 ###   MODEL ENVIRONMENT
 ###############################################################################
 
-class pyFUSE_Model():
+class pyFUSE():
     '''
     Create pyFUSE hydrological model, a python version and extention of the FORTRAN
     FUSE model environment by Clarke, 2008 [1]
@@ -81,7 +81,8 @@ class pyFUSE_Model():
 
     '''
 
-    def __init__(self,name,OPTIONS,PARS,RAIN,EVAPO,CONST,INITFRAC=0.1,oldfile=False):
+    def __init__(self, name, OPTIONS, PARS, RAIN,
+                 EVAPO, CONST, INITFRAC=0.1, oldfile=False):
         '''
         initiate the model structure:
             get pars extraction
@@ -139,7 +140,6 @@ class pyFUSE_Model():
             self.RAIN=RAIN
             self.EVAPO=EVAPO
             print 'Simulation of the model will run for %d timesteps' %RAIN.size
-
 
         #Define the constants
         ##################################
@@ -216,7 +216,6 @@ class pyFUSE_Model():
 
         TODO: make automatic and propose alternatives
         '''
-
 #                ! don't allow a lower tension tank when there are two upper ones
 #        IF (LIST_ARCH1(ISW_ARCH1)%MCOMPONENT(1:10).EQ.'tension2_1'.AND. &
 #            LIST_ARCH2(ISW_ARCH2)%MCOMPONENT(1:10).EQ.'tens2pll_2') CYCLE

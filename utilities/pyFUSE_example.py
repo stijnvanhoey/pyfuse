@@ -34,7 +34,7 @@ topt=pf.Set_options(os.path.join(datapath,'pyFUSE_strinput.txt'))
 tcnt=pf.Set_cnts(os.path.join(datapath,'pyFUSE_ctninput.txt'))
 tpar=pf.Set_pars(os.path.join(datapath,'pyFUSE_parinput.txt'))
 
-tmod = pf.pyFUSE_Model('mdtt.hdf5', topt, tpar, rain, evapo, tcnt)
+tmod = pf.pyFUSE('mdtt.hdf5', topt, tpar, rain, evapo, tcnt)
 
 ###########################################################
 # Run the model
