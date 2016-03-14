@@ -2,9 +2,9 @@ Model setup functions
 ==================================
 
 Model structure construction options
--------------------------------------   
+-------------------------------------
 
-.. autofunction:: pyFUSE.Set_options
+.. autofunction:: pyfuse.Set_options
 
 Template file for model options::
 
@@ -12,7 +12,7 @@ Template file for model options::
 	##    Model options input file
 	##    The options defined here are used to set up the model structure
 	##
-	##    (1) upper-layer architecture: uplayer 
+	##    (1) upper-layer architecture: uplayer
 	##        tension1_1: upper layer broken up into tension and free storage
 	##        tension2_1: tension storage sub-divided into recharge and excess
 	##        onestate_1: upper layer defined by a single state variable
@@ -27,7 +27,7 @@ Template file for model options::
 	##        prms_varnt: PRMS variant (fraction of upper tension storage)
 	##        tmdl_param: TOPMODEL parameterization (only valid for TOPMODEL qb)
 	##        oflwtresh: threshold based overland flow generation
-	##    (4) percolation     
+	##    (4) percolation
 	##        perc_f2sat: water from (field cap to sat) avail for percolation
 	##        perc_w2sat: water from (wilt pt to sat) avail for percolation
 	##        perc_lower: perc defined by moisture content in lower layer (SAC)
@@ -36,10 +36,10 @@ Template file for model options::
 	##    (5) evaporation
 	##        sequential: sequential evaporation model
 	##        rootweight: root weighting
-	##    (6) interflow   
+	##    (6) interflow
 	##        intflwnone: no interflow
 	##        intflwsome: linear interflow
-	##        intflwtresh: threshold based interflow generation   
+	##        intflwtresh: threshold based interflow generation
 	##    (7) routing
 	##        rout_all1: touting combined subflows
 	##        no_rout: no routing
@@ -48,9 +48,9 @@ Template file for model options::
 	## MODEL DECISION 	=   OPTION
 	uplayer				=	onestate_1
 	lowlayer_baseflow	= 	unlimfrc_2
-	surface				=	arno_x_vic 
+	surface				=	arno_x_vic
 	percolation			=	perc_w2sat
-	evaporation			=	sequential  
+	evaporation			=	sequential
 	interflow			=	intflwnone
 	routing				=	rout_all1
 
@@ -85,13 +85,13 @@ for the PDM model structure [2]_::
 	 'uplayer': 'onestate_1'}
 
 
-	
+
 Model parameters
 ------------------
 
-.. autofunction:: pyFUSE.Set_pars
+.. autofunction:: pyfuse.Set_pars
 
-.. autofunction:: pyFUSE.Set_pars_for_run	
+.. autofunction:: pyfuse.Set_pars_for_run
 
 Template file for parameters::
 
@@ -115,7 +115,7 @@ Template file for parameters::
 	#################################################
 	## NAME	MIN MAX OPTGUESS DISTRIBUTION ARGS*
 	S1max	50. 5000.000 400. randomTriangular 1000.
-	S2max	100. 10000.000 1000. randomNormal 500. 25. 
+	S2max	100. 10000.000 1000. randomNormal 500. 25.
 	fitens 0.01 1.0 0.99 randomLogNormal	0.5 0.2
 	firchr 0.050 0.950 0.5 randomTrapezoidal 0.4 0.6
 	fibase 0.050 0.950 0.5 randomUniform
@@ -146,29 +146,29 @@ Template file for parameters::
 	timei 2. 250. 20 randomUniform
 	timeb 200. 10000. 2100. randomUniform
 
-	
+
 Model constant values
 ----------------------
-	
-.. autofunction:: pyFUSE.Set_cnts
+
+.. autofunction:: pyfuse.Set_cnts
 
 Template file for constants::
 
 	#######################################################################
 	##	Model constants values
 	##	The options defined here are used to set up the model structure
-	##		
+	##
 	##	  area: the size of the catchment in km2
-	##	  timestep: timestep relative to the hourly timestep 	
-	#######################################################################	
+	##	  timestep: timestep relative to the hourly timestep
+	#######################################################################
 	## CONSTANT			 =   VALUE
 	area				=	362.
 	timestep			= 	1.
 
 
-	
+
 References
 ^^^^^^^^^^^^
 
 .. [1] DHI. MIKE 11, A Modelling System for Rivers and Channels, Reference Manual. Horsholm, Denmark: DHI Water & Environment, 2008.
-.. [2] Moore, R J. The PDM Rainfall-runoff Model. Hydrology and Earth System Sciences 11, no. 1 (2007): 483–499.
+.. [2] Moore, R J. The PDM Rainfall-runoff Model. Hydrology and Earth System Sciences 11, no. 1 (2007): 483-499.

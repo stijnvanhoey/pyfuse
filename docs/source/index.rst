@@ -3,16 +3,15 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to the pyFUSE documentation
+Welcome to the pyfuse documentation
 ====================================
 
 Contents:
 
 
-
 .. toctree::
    :maxdepth: 2
-   
+
    model
    setup
    pars
@@ -21,7 +20,7 @@ Contents:
    info
    extra
    example
-  
+
 Indices and tables
 ==================
 

@@ -1,16 +1,16 @@
 Extra Functions
 =================
-   
-.. autofunction:: pyFUSE.Logistic
 
-.. autofunction:: pyFUSE.calc_meantipow
+.. autofunction:: pyfuse.Logistic
+
+.. autofunction:: pyfuse.calc_meantipow
 
 The topographic index distribution is defined by:
 
 .. math:: f(\zeta) = \frac{1}{\chi \Gamma(\phi)} \left( \frac{\zeta-\mu}{\chi}\right) e^{\left( -\frac{\zeta-\mu}{\chi}\right)}
 
-.. autofunction:: pyFUSE.qtimedelay
+.. autofunction:: pyfuse.qtimedelay
 
-.. autofunction:: pyFUSE.linres
+.. autofunction:: pyfuse.linres
 
-.. autofunction:: pyFUSE.linresv
+.. autofunction:: pyfuse.linresv

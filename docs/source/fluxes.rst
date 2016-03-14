@@ -1,47 +1,47 @@
 Fluxes
-=======   
-.. autoclass:: pyFUSE.Flux_base
-   :members: 
+=======
+.. autoclass:: pyfuse.FluxBase
+   :members:
 
 
 Evapotranspiration
 -------------------
-   
-.. autoclass:: pyFUSE.Evaporation
-   :members: 
+
+.. autoclass:: pyfuse.Evaporation
+   :members:
 
 Percolation
--------------------   
-   
-.. autoclass:: pyFUSE.Percolation
-   :members: 
+-------------------
+
+.. autoclass:: pyfuse.Percolation
+   :members:
 
 Interflow
--------------------   
-   
-.. autoclass:: pyFUSE.Interflow
-   :members: 
+-------------------
+
+.. autoclass:: pyfuse.Interflow
+   :members:
 
 Surface
 -------------------
-   
-.. autoclass:: pyFUSE.Surface
-   :members:    
+
+.. autoclass:: pyfuse.Surface
+   :members:
 
 Base flow
--------------------   
-   
-.. autoclass:: pyFUSE.Baseflow
-   :members:    
+-------------------
+
+.. autoclass:: pyfuse.Baseflow
+   :members:
 
 Routing
--------------------   
-   
-.. autoclass:: pyFUSE.Routing
-   :members:    
+-------------------
 
-Miscellaneous bucket overflow   
+.. autoclass:: pyfuse.Routing
+   :members:
+
+Miscellaneous bucket overflow
 -------------------------------
-   
-.. autoclass:: pyFUSE.Misscell
+
+.. autoclass:: pyfuse.Misscell
    :members:
