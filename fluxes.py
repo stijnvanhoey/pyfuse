@@ -45,9 +45,9 @@ class FluxBase():
             raise Exception('Pars to use in fluxes must be given in dictionary format')
 
         if isinstance(options, dict):
-            self.OPTIONS=options
+            self.options=options
         else:
-            raise Exception('OPTIONS to use in fluxes must be given in dictionary format')
+            raise Exception('options to use in fluxes must be given in dictionary format')
 
 class Evaporation(FluxBase):
     """
@@ -61,15 +61,15 @@ class Evaporation(FluxBase):
 
     Parameters
     ----------
-    PARS : dictionary
+    parameters : dictionary
         Dictionary containing all the model parameters
-    OPTIONS: dictionary
+    options: dictionary
         Dictionary containting all the model structure options
 
     Methods
     ----------
     calc(STATES,FLUXES)
-        The calc method picks the correct definition based on the OPTIONS dictionary defined by the mode structure
+        The calc method picks the correct definition based on the options dictionary defined by the mode structure
     sequential(STATES,FLUXES)
         Sequential calculation of the evapotranspiration. First the upper layer is evaporating,
         wherafter the lower layer is evaporating. In the case of two tension reservoirs in the
@@ -107,24 +107,24 @@ class Evaporation(FluxBase):
 
     """
 
-    def __init__(self,PARS,OPTIONS):
-        FluxBase.__init__(self,PARS,OPTIONS)
+    def __init__(self, parameters, options):
+        FluxBase.__init__(self, parameters, options)
 #        print 'ET flux loaded'
-        print self.OPTIONS
+        print self.options
 
-    def calc(self,STATES,FLUXES):
-        if self.OPTIONS['evaporation'] == 'sequential':
-            return self.sequential(STATES,FLUXES)
+    def calc(self, STATES, FLUXES):
+        if self.options['evaporation'] == 'sequential':
+            return self.sequential(STATES, FLUXES)
 
-        elif self.OPTIONS['evaporation'] == 'rootweight':
-            return self.rootweight(STATES,FLUXES)
+        elif self.options['evaporation'] == 'rootweight':
+            return self.rootweight(STATES, FLUXES)
 
         else:
             raise Exception('No valid option chosen for evaporation')
 
     def sequential(self,STATES,FLUXES):
-        if self.OPTIONS['soilstorage'] == 'twolayer':
-            if self.OPTIONS['uplayer'] == 'tension2_1':
+        if self.options['soilstorage'] == 'twolayer':
+            if self.options['uplayer'] == 'tension2_1':
                 '''
                 M_FLUX%EVAP_1A = MFORCE%PET * TSTATE%TENS_1A/DPARAM%MAXTENS_1A
                 M_FLUX%EVAP_1B = (MFORCE%PET - M_FLUX%EVAP_1A) * TSTATE%TENS_1B/DPARAM%MAXTENS_1B
@@ -140,8 +140,8 @@ class Evaporation(FluxBase):
                 FLUXES['e1']=e1
                 FLUXES['e_all']=e1
 
-            elif  self.OPTIONS['uplayer'] == 'tension1_1' or \
-            self.OPTIONS['uplayer'] == 'onestate_1':
+            elif  self.options['uplayer'] == 'tension1_1' or \
+            self.options['uplayer'] == 'onestate_1':
                 '''
                 M_FLUX%EVAP_1A = 0._sp
                 M_FLUX%EVAP_1B = 0._sp
@@ -152,7 +152,7 @@ class Evaporation(FluxBase):
                 FLUXES['e1']=e1
                 FLUXES['e_all']=e1
 
-            elif self.OPTIONS['uplayer'] == 'surface1_1':
+            elif self.options['uplayer'] == 'surface1_1':
                 '''
                 surface style
                 '''
@@ -169,11 +169,11 @@ class Evaporation(FluxBase):
                 raise Exception('Two layer system must have firts layer option of tension2_1, tension1_1 or onestate_1')
 
         #TWO LAYERS ->lower layer
-        if self.OPTIONS['soilstorage'] == 'twolayer':
+        if self.options['soilstorage'] == 'twolayer':
             #CHECK LOWER LAYER CHOICE
-            if self.OPTIONS['lowlayer_baseflow'] == 'tens2pll_2' or self.OPTIONS['lowlayer_baseflow'] =='fixedsiz_2':
+            if self.options['lowlayer_baseflow'] == 'tens2pll_2' or self.options['lowlayer_baseflow'] =='fixedsiz_2':
                 #CHECK THE UPPER LAYER CHOICE
-                if self.OPTIONS['uplayer'] == 'tension1_1'or self.OPTIONS['uplayer'] == 'onestate_1':
+                if self.options['uplayer'] == 'tension1_1'or self.options['uplayer'] == 'onestate_1':
                     '''
                     M_FLUX%EVAP_2 = (MFORCE%PET-M_FLUX%EVAP_1) * (TSTATE%TENS_2/DPARAM%MAXTENS_2)
                     '''
@@ -182,13 +182,13 @@ class Evaporation(FluxBase):
                     FLUXES['e2']=e2
                     FLUXES['e_all']=FLUXES['e_all']+e2
 
-                elif self.OPTIONS['uplayer'] == 'tension2_1' or self.OPTIONS['uplayer'] == 'surface1_1':
+                elif self.options['uplayer'] == 'tension2_1' or self.options['uplayer'] == 'surface1_1':
                     e2 = 0.0
                     FLUXES['e2']=e2
                 else:
                     raise Exception('must be tension1_1, onestate_1 or tension2_1')
 
-            elif self.OPTIONS['lowlayer_baseflow'] == 'unlimfrc_2' or self.OPTIONS['lowlayer_baseflow'] == 'unlimpow_2':
+            elif self.options['lowlayer_baseflow'] == 'unlimfrc_2' or self.options['lowlayer_baseflow'] == 'unlimpow_2':
                 e2 = 0.0
                 FLUXES['e2']=e2
             else:
@@ -197,8 +197,8 @@ class Evaporation(FluxBase):
 
     def rootweight(self,STATES,FLUXES):
         #TWO LAYER ->upper layer
-        if self.OPTIONS['soilstorage'] == 'twolayer':
-            if self.OPTIONS['uplayer'] == 'tension2_1':
+        if self.options['soilstorage'] == 'twolayer':
+            if self.options['uplayer'] == 'tension2_1':
                 '''
                 M_FLUX%EVAP_1A = MFORCE%PET * MPARAM%RTFRAC1 * TSTATE%TENS_1A/DPARAM%MAXTENS_1A
                 M_FLUX%EVAP_1B = MFORCE%PET * DPARAM%RTFRAC2 * TSTATE%TENS_1B/DPARAM%MAXTENS_1B
@@ -210,8 +210,8 @@ class Evaporation(FluxBase):
                 FLUXES['e1']=e1
                 FLUXES['e_all']=e1
 
-            elif  self.OPTIONS['uplayer'] == 'tension1_1' or \
-            self.OPTIONS['uplayer'] == 'onestate_1':
+            elif  self.options['uplayer'] == 'tension1_1' or \
+            self.options['uplayer'] == 'onestate_1':
                 '''
                 M_FLUX%EVAP_1A = 0._sp
                 M_FLUX%EVAP_1B = 0._sp
@@ -221,7 +221,7 @@ class Evaporation(FluxBase):
                 FLUXES['e1']=e1
                 FLUXES['e_all']=e1
 
-            elif self.OPTIONS['uplayer'] == 'surface1_1':
+            elif self.options['uplayer'] == 'surface1_1':
                 '''
                 surface style
                 '''
@@ -237,11 +237,11 @@ class Evaporation(FluxBase):
                 raise Exception('Two layer system must have firts layer option of tension2_1, tension1_1 or onestate_1')
 
         #TWO LAYER ->lower layer
-        if self.OPTIONS['soilstorage'] == 'twolayer':
+        if self.options['soilstorage'] == 'twolayer':
             #CHECK LOWER LAYER CHOICE
-            if self.OPTIONS['lowlayer_baseflow'] == 'tens2pll_2' or self.OPTIONS['lowlayer_baseflow'] =='fixedsiz_2':
+            if self.options['lowlayer_baseflow'] == 'tens2pll_2' or self.options['lowlayer_baseflow'] =='fixedsiz_2':
                 #CHECK THE UPPER LAYER CHOICE
-                if self.OPTIONS['uplayer'] == 'tension1_1'or self.OPTIONS['uplayer'] == 'onestate_1':
+                if self.options['uplayer'] == 'tension1_1'or self.options['uplayer'] == 'onestate_1':
                     '''
                     M_FLUX%EVAP_2 = MFORCE%PET * DPARAM%RTFRAC2 * (TSTATE%TENS_2/DPARAM%MAXTENS_2)
                     '''
@@ -250,14 +250,14 @@ class Evaporation(FluxBase):
                     FLUXES['e_all']=FLUXES['e_all']+e2
 #                    return FLUXES
 
-                elif self.OPTIONS['uplayer'] == 'tension2_1' or self.OPTIONS['uplayer'] =='surface1_1':
+                elif self.options['uplayer'] == 'tension2_1' or self.options['uplayer'] =='surface1_1':
                     e2 = 0.0
                     FLUXES['e2']=e2
 #                    return FLUXES
                 else:
                     raise Exception('must be tension1_1, onestate_1 or tension2_1')
 
-            elif self.OPTIONS['lowlayer_baseflow'] == 'unlimfrc_2' or self.OPTIONS['lowlayer_baseflow'] == 'unlimpow_2' or self.OPTIONS['lowlayer_baseflow'] == 'topmdexp_2':
+            elif self.options['lowlayer_baseflow'] == 'unlimfrc_2' or self.options['lowlayer_baseflow'] == 'unlimpow_2' or self.options['lowlayer_baseflow'] == 'topmdexp_2':
                 e2 = 0.0
                 FLUXES['e2']=e2
 
@@ -278,9 +278,9 @@ class Evaporation(FluxBase):
 #        #water extraction from the upper layer (smoothed)
 #
 #        #TWO LAYER ->upper layer
-#        if self.OPTIONS['soilstorage'] == 'twolayer':
-#            if self.OPTIONS['uplayer'] == 'tension2_1' or \
-#            self.OPTIONS['uplayer'] == 'tension1_1':
+#        if self.options['soilstorage'] == 'twolayer':
+#            if self.options['uplayer'] == 'tension2_1' or \
+#            self.options['uplayer'] == 'tension1_1':
 #                '''
 #                M_FLUX%EVAP_1A = 0._sp
 #                M_FLUX%EVAP_1B = 0._sp
@@ -291,7 +291,7 @@ class Evaporation(FluxBase):
 #                FLUXES['e1']=e1
 #                FLUXES['e_all']=e1
 #
-#            elif self.OPTIONS['uplayer'] == 'onestate_1':
+#            elif self.options['uplayer'] == 'onestate_1':
 #                '''
 #                M_FLUX%EVAP_1A = 0._sp
 #                M_FLUX%EVAP_1B = 0._sp
@@ -306,11 +306,11 @@ class Evaporation(FluxBase):
 #                raise Exception('Two layer system must have firts layer option of tension2_1, tension1_1 or onestate_1')
 #
 #        #TWO LAYER ->lower layer
-#        if self.OPTIONS['soilstorage'] == 'twolayer':
+#        if self.options['soilstorage'] == 'twolayer':
 #            #CHECK LOWER LAYER CHOICE
-#            if self.OPTIONS['lowlayer_baseflow'] == 'tens2pll_2' or self.OPTIONS['lowlayer_baseflow'] =='fixedsiz_2':
+#            if self.options['lowlayer_baseflow'] == 'tens2pll_2' or self.options['lowlayer_baseflow'] =='fixedsiz_2':
 #                #CHECK THE UPPER LAYER CHOICE
-#                if self.OPTIONS['uplayer'] == 'tension1_1'or self.OPTIONS['uplayer'] == 'onestate_1':
+#                if self.options['uplayer'] == 'tension1_1'or self.options['uplayer'] == 'onestate_1':
 #                    '''
 #                    M_FLUX%EVAP_2 = MFORCE%PET * DPARAM%RTFRAC2 * (TSTATE%TENS_2/DPARAM%MAXTENS_2)
 #                    '''
@@ -319,14 +319,14 @@ class Evaporation(FluxBase):
 #                    FLUXES['e_all']=FLUXES['e_all']+e2
 ##                    return FLUXES
 #
-#                elif self.OPTIONS['uplayer'] == 'tension2_1':
+#                elif self.options['uplayer'] == 'tension2_1':
 #                    e2 = 0.0
 #                    FLUXES['e2']=e2
 ##                    return FLUXES
 #                else:
 #                    raise Exception('must be tension1_1, onestate_1 or tension2_1')
 #
-#            elif self.OPTIONS['lowlayer_baseflow'] == 'unlimfrc_2' or self.OPTIONS['lowlayer_baseflow'] == 'unlimpow_2' or self.OPTIONS['lowlayer_baseflow'] == 'topmdexp_2':
+#            elif self.options['lowlayer_baseflow'] == 'unlimfrc_2' or self.options['lowlayer_baseflow'] == 'unlimpow_2' or self.options['lowlayer_baseflow'] == 'topmdexp_2':
 #                e2 = 0.0
 #                FLUXES['e2']=e2
 #
@@ -347,15 +347,15 @@ class Percolation(FluxBase):
 
     Parameters
     -----------
-    PARS : dictionary
+    parameters : dictionary
         Dictionary containing all the model parameters
-    OPTIONS: dictionary
+    options: dictionary
         Dictionary containting all the model structure options
 
     Methods
     ----------
     calc(STATES,FLUXES)
-        The calc method picks the correct definition based on the OPTIONS dictionary defined by the mode structure
+        The calc method picks the correct definition based on the options dictionary defined by the mode structure
 
     perc_tresh(STATES,FLUXES)
         Treshold calculation of the percolation. When using surface storage,
@@ -433,27 +433,27 @@ class Percolation(FluxBase):
     FLUXES: dict
             Dictionary containting all the fluxes structure options
     """
-    def __init__(self,PARS,OPTIONS):
-        FluxBase.__init__(self,PARS,OPTIONS)
+    def __init__(self,parameters,options):
+        FluxBase.__init__(self,parameters,options)
 #        print 'Percolation flux loaded'
 
     def calc(self,STATES,FLUXES):
-        if self.OPTIONS['percolation'] == 'perc_w2sat':
+        if self.options['percolation'] == 'perc_w2sat':
             return self.perc_w2sat(STATES,FLUXES)
 
-        elif self.OPTIONS['percolation'] == 'perc_f2sat':
+        elif self.options['percolation'] == 'perc_f2sat':
             return self.perc_f2sat(STATES,FLUXES)
 
-#        elif self.OPTIONS['percolation'] == 'perc_pdm':
+#        elif self.options['percolation'] == 'perc_pdm':
 #            return self.perc_pdm(STATES,FLUXES)
 
-        elif self.OPTIONS['percolation'] == 'perc_lower':
+        elif self.options['percolation'] == 'perc_lower':
             return self.perc_lower(STATES,FLUXES)
 
-        elif self.OPTIONS['percolation'] == 'perc_nodrain':
+        elif self.options['percolation'] == 'perc_nodrain':
             return self.perc_nodrain(STATES,FLUXES)
 
-        elif self.OPTIONS['percolation'] == 'perc_tresh':
+        elif self.options['percolation'] == 'perc_tresh':
             return self.perc_tresh(STATES,FLUXES)
 
         else:
@@ -461,7 +461,7 @@ class Percolation(FluxBase):
 
     def perc_tresh(self,STATES,FLUXES):
 
-        if self.OPTIONS['uplayer'] == 'surface1_1':
+        if self.options['uplayer'] == 'surface1_1':
             wf=Logistic(STATES['S1F'],self.parameters['S1Fmax'],Psmooth=0.01)
             wfg=Logistic(STATES['S1T']/self.parameters['S1Tmax'],self.parameters['tg'],Psmooth=0.01)
             q12 = ((STATES['S1T']/self.parameters['S1Tmax'] - self.parameters['tg'])/(1.-self.parameters['tg']))*STATES['S1F']*wf*wfg
@@ -519,13 +519,13 @@ class Percolation(FluxBase):
         qbsat (q0 in model description)
         '''
 
-        if self.OPTIONS['lowlayer_baseflow'] == 'tens2pll_2':
+        if self.options['lowlayer_baseflow'] == 'tens2pll_2':
             qbsat = self.parameters['vA']* self.parameters['S2FAmax'] + self.parameters['vB'] * self.parameters['S2FBmax']
 
-        elif self.OPTIONS['lowlayer_baseflow'] == 'unlimfrc_2':
+        elif self.options['lowlayer_baseflow'] == 'unlimfrc_2':
             qbsat = self.parameters['v']* self.parameters['S2max']
 
-        elif self.OPTIONS['lowlayer_baseflow'] == 'unlimpow_2':
+        elif self.options['lowlayer_baseflow'] == 'unlimpow_2':
             #      ! This is a bit tricky.  The capacity of the aquifer is m*n, where m is a scaling
             #      ! parameter.  We have the capacity, i.e., MPARAM%MAXWATR_2/1000., and need the
             #      ! TOPMODEL "m" parameter
@@ -533,13 +533,13 @@ class Percolation(FluxBase):
             #      ! ...and, compute baseflow
             qbsat = self.parameters['ks'] * (TOPmdm/(self.parameters['powlambda']**self.parameters['n']))
 
-#        elif self.OPTIONS['lowlayer_baseflow'] == 'topmdexp_2':
+#        elif self.options['lowlayer_baseflow'] == 'topmdexp_2':
 #            #          ! for simplicity we use the CAPACITY as the TOPMODEL scaling parameter
 #            TOPmdm = self.parameters['S2max']/1000.                   # NOTE: mm --> m
 #            #          ! ..., and compute baseflow
 #            qbsat = self.parameters['ks'] * TOPmdm * np.exp(self.parameters['loglambda'])
 
-        elif self.OPTIONS['lowlayer_baseflow'] == 'fixedsiz_2':
+        elif self.options['lowlayer_baseflow'] == 'fixedsiz_2':
             qbsat = self.parameters['ks']
 
         else:
@@ -556,15 +556,15 @@ class Interflow(FluxBase):
 
     Parameters
     ----------
-    PARS : dictionary
+    parameters : dictionary
         Dictionary containing all the model parameters
-    OPTIONS: dictionary
+    options: dictionary
         Dictionary containting all the model structure options
 
     Methods
     ----------
     calc(STATES,FLUXES)
-        The calc method picks the correct definition based on the OPTIONS dictionary defined by the mode structure
+        The calc method picks the correct definition based on the options dictionary defined by the mode structure
 
     intflwnone(STATES,FLUXES)
         No interflow, like in TOPMODEL and ARNO/VIC
@@ -611,18 +611,18 @@ class Interflow(FluxBase):
 
     """
 
-    def __init__(self,PARS,OPTIONS):
-        FluxBase.__init__(self,PARS,OPTIONS)
+    def __init__(self,parameters,options):
+        FluxBase.__init__(self,parameters,options)
 #        print 'Interflow flux loaded'
 
     def calc(self,STATES,FLUXES):
-        if self.OPTIONS['interflow'] == 'intflwnone':
+        if self.options['interflow'] == 'intflwnone':
             return self.intflwnone(STATES,FLUXES)
 
-        elif self.OPTIONS['interflow'] == 'intflwsome':
+        elif self.options['interflow'] == 'intflwsome':
             return self.intflwsome(STATES,FLUXES)
 
-        elif self.OPTIONS['interflow'] == 'intflwtresh':
+        elif self.options['interflow'] == 'intflwtresh':
             return self.intflwsome(STATES,FLUXES)
 
         else:
@@ -639,7 +639,7 @@ class Interflow(FluxBase):
         return FLUXES
 
     def intflwtresh(self,STATES,FLUXES):
-        if self.OPTIONS['uplayer'] == 'surface1_1':
+        if self.options['uplayer'] == 'surface1_1':
             wfif=Logistic(STATES['S1']/self.parameters['S1Tmax'],self.parameters['tif'],Psmooth=0.01)
             qif = self.parameters['ki'] * wfif* STATES['S1F'] *((STATES['S1T']/self.parameters['S1Tmax']-self.parameters['tif'])/(1.-self.parameters['tif']))
             FLUXES['qif']=qif
@@ -662,15 +662,15 @@ class Surface(FluxBase):
 
     Parameters
     ----------
-    PARS : dictionary
+    parameters : dictionary
         Dictionary containing all the model parameters
-    OPTIONS: dictionary
+    options: dictionary
         Dictionary containting all the model structure options
 
     Methods
     ----------
     calc(STATES,FLUXES)
-        The calc method picks the correct definition based on the OPTIONS dictionary defined by the mode structure
+        The calc method picks the correct definition based on the options dictionary defined by the mode structure
 
     arno_x_vic(STATES,FLUXES)
         VIC conceptualization for surface storage (or Pareto distribution in Moore-PDM concept)
@@ -739,24 +739,24 @@ class Surface(FluxBase):
 
     """
 
-    def __init__(self,PARS,OPTIONS):
-        FluxBase.__init__(self,PARS,OPTIONS)
+    def __init__(self,parameters,options):
+        FluxBase.__init__(self,parameters,options)
 #        print 'Surface flux loaded'
 
     def calc(self,STATES,FLUXES):
-        if self.OPTIONS['surface'] == 'arno_x_vic':
+        if self.options['surface'] == 'arno_x_vic':
             return self.arno_x_vic(STATES,FLUXES)
 
-        elif self.OPTIONS['surface'] == 'prms_varnt':
+        elif self.options['surface'] == 'prms_varnt':
             return self.prms_varnt(STATES,FLUXES)
 
-        elif self.OPTIONS['surface'] == 'tmdl_param':
+        elif self.options['surface'] == 'tmdl_param':
             return self.tmdl_param(STATES,FLUXES)
 
-        elif self.OPTIONS['surface'] == 'testeasy':
+        elif self.options['surface'] == 'testeasy':
             return self.testeasy(STATES,FLUXES)
 
-        elif self.OPTIONS['surface'] == 'oflwtresh':
+        elif self.options['surface'] == 'oflwtresh':
             return self.oflwtresh(STATES,FLUXES)
 
 
@@ -767,7 +767,7 @@ class Surface(FluxBase):
     def arno_x_vic(self,STATES,FLUXES):
         Sat_area = 1. - (1. - min(STATES['S1']/self.parameters['S1max'], 1.))**self.parameters['b']
         qsx = Sat_area * FLUXES['rain']
-        if self.OPTIONS['percolation'] == 'perc_nodrain':
+        if self.options['percolation'] == 'perc_nodrain':
             FLUXES['qsx']=qsx*self.parameters['alfah']
         else:
             FLUXES['qsx']=qsx
@@ -776,7 +776,7 @@ class Surface(FluxBase):
     def prms_varnt(self,STATES,FLUXES):
         Sat_area = min(STATES['S1T']/self.parameters['S1Tmax'],1.) * self.parameters['Acmax']
         qsx = Sat_area * FLUXES['rain']
-        if self.OPTIONS['percolation'] == 'perc_nodrain':
+        if self.options['percolation'] == 'perc_nodrain':
             FLUXES['qsx']=qsx*self.parameters['alfah']
         else:
             FLUXES['qsx']=qsx
@@ -798,14 +798,14 @@ class Surface(FluxBase):
 
         qsx = Sat_area * FLUXES['rain']
 
-        if self.OPTIONS['percolation'] == 'perc_nodrain':
+        if self.options['percolation'] == 'perc_nodrain':
             FLUXES['qsx']=qsx*self.parameters['alfah']
         else:
             FLUXES['qsx']=qsx
         return FLUXES
 
     def oflwtresh(self,STATES,FLUXES):
-        if self.OPTIONS['uplayer'] == 'surface1_1':
+        if self.options['uplayer'] == 'surface1_1':
             wfof=Logistic(STATES['S1T']/self.parameters['S1Tmax'],self.parameters['tof'],Psmooth=0.01)
             Sat_area = self.parameters['ko'] * wfof* ((STATES['S1T']/self.parameters['S1Tmax']-self.parameters['tof'])/(1.-self.parameters['tof']))
             qsx = Sat_area * FLUXES['rain']
@@ -815,7 +815,7 @@ class Surface(FluxBase):
             Sat_area = self.parameters['ko'] * wfof* ((STATES['S2T']/self.parameters['S2Tmax']-self.parameters['tof'])/(1.-self.parameters['tof']))
             qsx = Sat_area * FLUXES['rain']
 
-        if self.OPTIONS['percolation'] == 'perc_nodrain':
+        if self.options['percolation'] == 'perc_nodrain':
             FLUXES['qsx']=qsx*self.parameters['alfah']
         else:
             FLUXES['qsx']=qsx
@@ -826,7 +826,7 @@ class Surface(FluxBase):
         Only for testing purposes!
         '''
         qsx = STATES['S']*0.2
-        if self.OPTIONS['percolation'] == 'perc_nodrain':
+        if self.options['percolation'] == 'perc_nodrain':
             FLUXES['qsx']=qsx*self.parameters['alfah']
         else:
             FLUXES['qsx']=qsx
@@ -843,15 +843,15 @@ class Baseflow(FluxBase):
 
     Parameters
     ----------
-    PARS : dictionary
+    parameters : dictionary
         Dictionary containing all the model parameters
-    OPTIONS: dictionary
+    options: dictionary
         Dictionary containting all the model structure options
 
     Methods
     ----------
     calc(STATES,FLUXES)
-        The calc method picks the correct definition based on the OPTIONS dictionary defined by the mode structure
+        The calc method picks the correct definition based on the options dictionary defined by the mode structure
 
     tens2pll_2(STATES,FLUXES)
         Two parallel linear reservoirs used in conjunction with 2 parallel
@@ -916,29 +916,29 @@ class Baseflow(FluxBase):
 
     """
 
-    def __init__(self,PARS,OPTIONS):
-        FluxBase.__init__(self,PARS,OPTIONS)
+    def __init__(self,parameters,options):
+        FluxBase.__init__(self,parameters,options)
 #        print 'Baseflow flux loaded'
 
     def calc(self,STATES,FLUXES):
         #'lowlayer_baseflow']= 'tens2pll_2','unlimfrc_2','unlimpow_2','fixedsiz_2','topmdexp_2'
 
-        if self.OPTIONS['lowlayer_baseflow'] == 'tens2pll_2':
+        if self.options['lowlayer_baseflow'] == 'tens2pll_2':
             return self.tens2pll_2(STATES,FLUXES)
 
-        elif self.OPTIONS['lowlayer_baseflow'] == 'unlimfrc_2':
+        elif self.options['lowlayer_baseflow'] == 'unlimfrc_2':
             return self.unlimfrc_2(STATES,FLUXES)
 
-        elif self.OPTIONS['lowlayer_baseflow'] == 'unlimpow_2':
+        elif self.options['lowlayer_baseflow'] == 'unlimpow_2':
             return self.unlimpow_2(STATES,FLUXES)
 
-        elif self.OPTIONS['lowlayer_baseflow'] == 'fixedsiz_2': #nonlinear
+        elif self.options['lowlayer_baseflow'] == 'fixedsiz_2': #nonlinear
             return self.fixedsiz_2(STATES,FLUXES)
 
-#        elif self.OPTIONS['lowlayer_baseflow'] == 'fromupper': #baseflow from upper storage (infiltration)
+#        elif self.options['lowlayer_baseflow'] == 'fromupper': #baseflow from upper storage (infiltration)
 #            return self.fromupper(STATES,FLUXES)
 
-#        elif self.OPTIONS['lowlayer_baseflow'] == 'topmdexp_2':
+#        elif self.options['lowlayer_baseflow'] == 'topmdexp_2':
 #            return self.topmdexp_2(STATES,FLUXES)
 
         else:
@@ -972,13 +972,13 @@ class Baseflow(FluxBase):
 
 
     def calc_Qbsat(self):
-        if self.OPTIONS['lowlayer_baseflow'] == 'tens2pll_2':
+        if self.options['lowlayer_baseflow'] == 'tens2pll_2':
             qbsat = self.parameters['vA']* self.parameters['S2FAmax'] + self.parameters['vB'] * self.parameters['S2FBmax']
 
-        elif self.OPTIONS['lowlayer_baseflow'] == 'unlimfrc_2':
+        elif self.options['lowlayer_baseflow'] == 'unlimfrc_2':
             qbsat = self.parameters['v']* self.parameters['S2max']
 
-        elif self.OPTIONS['lowlayer_baseflow'] == 'unlimpow_2':
+        elif self.options['lowlayer_baseflow'] == 'unlimpow_2':
             #      ! This is a bit tricky.  The capacity of the aquifer is m*n, where m is a scaling
             #      ! parameter.  We have the capacity, i.e., MPARAM%MAXWATR_2/1000., and need the
             #      ! TOPMODEL "m" parameter
@@ -986,7 +986,7 @@ class Baseflow(FluxBase):
             #      ! ...and, compute baseflow
             qbsat = self.parameters['ks'] * (TOPmdm/(self.parameters['powlambda']**self.parameters['n']))
 
-        elif self.OPTIONS['lowlayer_baseflow'] == 'fixedsiz_2': #this is redundant
+        elif self.options['lowlayer_baseflow'] == 'fixedsiz_2': #this is redundant
             qbsat = self.parameters['ks']
 
         else:
@@ -1003,15 +1003,15 @@ class Routing(FluxBase):
 
     Parameters
     ----------
-    PARS : dictionary
+    parameters : dictionary
         Dictionary containing all the model parameters
-    OPTIONS: dictionary
+    options: dictionary
         Dictionary containting all the model structure options
 
     Methods
     -----------
     calc(STATES,FLUXES,ROUTLIB)
-        The calc method picks the correct definition based on the OPTIONS dictionary defined by the mode structure
+        The calc method picks the correct definition based on the options dictionary defined by the mode structure
 
     rout_all1(STATES,FLUXES)
         Routing of the sum of all subflows
@@ -1061,18 +1061,19 @@ class Routing(FluxBase):
     Notes
     -------
     TODO: make also gamma distribution based to enable also non-integer reservoir value
+    https://github.com/cvitolo/r_fuse/blob/master/fuse/src/fuse.cpp lijn 114!
     """
-    def __init__(self,PARS,OPTIONS):
-        FluxBase.__init__(self,PARS,OPTIONS)
+    def __init__(self,parameters,options):
+        FluxBase.__init__(self,parameters,options)
 #        print 'Routing flux loaded'
 
 
     def calc(self,STATES,FLUXES,ROUTLIB):
-        if self.OPTIONS['routing'] == 'rout_all1':
+        if self.options['routing'] == 'rout_all1':
             return self.rout_all1(STATES,FLUXES)
-        elif self.OPTIONS['routing'] == 'no_rout':
+        elif self.options['routing'] == 'no_rout':
             return self.no_rout(STATES,FLUXES)
-        elif self.OPTIONS['routing'] == 'rout_ind':
+        elif self.options['routing'] == 'rout_ind':
             return self.rout_ind(STATES,FLUXES,ROUTLIB)
         else:
             raise Exception('No valid option chosen for routing')
@@ -1177,9 +1178,9 @@ class Misscell(FluxBase):
 
     Parameters
     -----------
-    PARS : dictionary
+    parameters : dictionary
         Dictionary containing all the model parameters
-    OPTIONS: dictionary
+    options: dictionary
         Dictionary containting all the model structure options
 
     Attributes
@@ -1194,14 +1195,14 @@ class Misscell(FluxBase):
     pyFUSE.Logistic: For the logistic smoother used
     """
 
-    def __init__(self,PARS,OPTIONS,solver=True):
-        FluxBase.__init__(self,PARS,OPTIONS)
+    def __init__(self,parameters,options,solver=True):
+        FluxBase.__init__(self,parameters,options)
 #        print 'Miscellaneous fluxes flux loaded'
 
 
     def calc(self,STATES,FLUXES):
         '''
-        The calc method picks the correct definition based on the OPTIONS dictionary defined by the mode structure
+        The calc method picks the correct definition based on the options dictionary defined by the mode structure
 
         Parameters
         ----------
@@ -1217,31 +1218,31 @@ class Misscell(FluxBase):
         '''
 
         #UPPER LAYER
-        if self.OPTIONS['uplayer']== 'onestate_1':
+        if self.options['uplayer']== 'onestate_1':
             return self.onestate_1(STATES,FLUXES)
-        elif self.OPTIONS['uplayer']== 'tension1_1':
+        elif self.options['uplayer']== 'tension1_1':
             return self.tension1_1(STATES,FLUXES)
-        elif self.OPTIONS['uplayer']== 'tension2_1':
+        elif self.options['uplayer']== 'tension2_1':
             return self.tension2_1(STATES,FLUXES)
-        elif self.OPTIONS['uplayer']== 'surface1_1':
+        elif self.options['uplayer']== 'surface1_1':
             return self.surface1_1(STATES,FLUXES)
         else:
             raise Exception('No valid option chosen for baseflow upper layer')
 
         #LOWER LAYER
-        if self.OPTIONS['lowlayer_baseflow'] == 'tens2pll_2':
+        if self.options['lowlayer_baseflow'] == 'tens2pll_2':
             return self.tens2pll_2(STATES,FLUXES)
 
-        elif self.OPTIONS['lowlayer_baseflow'] == 'unlimfrc_2':
+        elif self.options['lowlayer_baseflow'] == 'unlimfrc_2':
             return self.no_limit(STATES,FLUXES)
 
-        elif self.OPTIONS['lowlayer_baseflow'] == 'unlimpow_2':
+        elif self.options['lowlayer_baseflow'] == 'unlimpow_2':
             return self.no_limit(STATES,FLUXES)
 
-        elif self.OPTIONS['lowlayer_baseflow'] == 'topmdexp_2':
+        elif self.options['lowlayer_baseflow'] == 'topmdexp_2':
             return self.no_limit(STATES,FLUXES)
 
-        elif self.OPTIONS['lowlayer_baseflow'] == 'fixedsiz_2':
+        elif self.options['lowlayer_baseflow'] == 'fixedsiz_2':
             return self.fixedsiz_2(STATES,FLUXES)
 
         else:
