@@ -16,6 +16,7 @@ git checkout gh-pages
 # remove the old _files
 rm -r ./_*
 # put new hmtl files in the directory
+touch .nojekyll
 mv docs/build/html/* .
 
 # commit the new docs for publishing
