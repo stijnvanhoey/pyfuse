@@ -1,0 +1,775 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Fluxes &mdash; pyfuse 1.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="pyfuse 1.0.1 documentation" href="index.html" />
+    <link rel="next" title="Probability distribution function handling" href="distro.html" />
+    <link rel="prev" title="Model Parameters" href="pars.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="distro.html" title="Probability distribution function handling"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="pars.html" title="Model Parameters"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">pyfuse 1.0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="fluxes">
+<h1>Fluxes<a class="headerlink" href="#fluxes" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="pyfuse.FluxBase">
+<em class="property">class </em><code class="descclassname">pyfuse.</code><code class="descname">FluxBase</code><span class="sig-paren">(</span><em>parameters</em>, <em>options</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyfuse/fluxes.html#FluxBase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyfuse.FluxBase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class for the fluxes to be used by all fluxes used in the model
+representation</p>
+<p>Basically a flux is a calculated process giving an output based on the states on a particular moment
+This base-class is used add specific methods for extraction of information (todo)</p>
+<p>Since for one model run, parameters and options are constant,
+when setting-up the model, all fluxes are loaded and pars
+dictionary is directed</p>
+<dl class="docutils">
+<dt>Information when adding a new flux option:</dt>
+<dd><ul class="first last simple">
+<li>need to add elif in the calc of the flux</li>
+<li>create new method (+ adding in general list!)</li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<div class="section" id="evapotranspiration">
+<h2>Evapotranspiration<a class="headerlink" href="#evapotranspiration" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="pyfuse.Evaporation">
+<em class="property">class </em><code class="descclassname">pyfuse.</code><code class="descname">Evaporation</code><span class="sig-paren">(</span><em>parameters</em>, <em>options</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyfuse/fluxes.html#Evaporation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyfuse.Evaporation" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Class for Evapotranspiration fluxes calculation, with 2 implemented options:</dt>
+<dd><ol class="first last arabic simple">
+<li>sequential: upper layer is first evaporating and the remaining is extracted from the lower layer</li>
+<li>root-weight: the amount of roots (parameter r1) defines the relative evaporation</li>
+</ol>
+</dd>
+<dt>Information when adding a new flux option:</dt>
+<dd><ul class="first last simple">
+<li>need to add elif in the calc</li>
+<li>create new method (+ adding in general list!)</li>
+</ul>
+</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>parameters</strong> : dictionary</p>
+<blockquote>
+<div><p>Dictionary containing all the model parameters</p>
+</div></blockquote>
+<p><strong>options: dictionary</strong></p>
+<blockquote class="last">
+<div><p>Dictionary containting all the model structure options</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="13%" />
+<col width="87%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>STATES: dict</td>
+<td>Dictionary containing all the model states of the current calculation time step</td>
+</tr>
+<tr class="row-even"><td>FLUXES: dict</td>
+<td>Dictionary containting all the fluxes structure options</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="4%" />
+<col width="96%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>calc(STATES,FLUXES)</td>
+<td>The calc method picks the correct definition based on the options dictionary defined by the mode structure</td>
+</tr>
+<tr class="row-even"><td>sequential(STATES,FLUXES)</td>
+<td>Sequential calculation of the evapotranspiration. First the upper layer is evaporating, wherafter the lower layer is evaporating. In the case of two tension reservoirs in the upper layer, e1 and e2 are extracted from those two storages. For the surface option, e1 is evaporation from the surface storage, e2, the upper tension storage  Model States: dependent of the upper and lower configuration, one or more of: S1TA, S1TB, S1T, S2T, S1F, S2T Model Parameters: be, S1Tmax, S2Tmax Fluxes returned: e1, e2, e_all</td>
+</tr>
+<tr class="row-odd"><td>root-weight(STATES,FLUXES)</td>
+<td>root-weight calculation of the evapotranspiration. First the upper layer is evaporating based on the r1 rootweight and the lower layer is evaporating based on (1-r1). In the case of two tension reservoirs in the upper layer, e1 and e2 are extracted from those two storages. For the surface option, r1 parameter is related to the surface storage and (1-r1) to the upper tension storage  Model States: dependent of the upper and lower configuration, one or more of: S1TA, S1TB, S1T, S2T, S1F, S2T Model Parameters: be, S1Tmax, S2Tmax, r1 (r2 = 1-r1) Fluxes returned: e1, e2, e_all</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="percolation">
+<h2>Percolation<a class="headerlink" href="#percolation" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="pyfuse.Percolation">
+<em class="property">class </em><code class="descclassname">pyfuse.</code><code class="descname">Percolation</code><span class="sig-paren">(</span><em>parameters</em>, <em>options</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyfuse/fluxes.html#Percolation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyfuse.Percolation" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Class for Percolation fluxes calculation, with 5 implemented options:</dt>
+<dd><ol class="first last arabic simple">
+<li>perc_w2sat: percolation from the entire upper layer storage</li>
+<li>perc_f2sat: percolation from the free upper layer storage</li>
+<li>perc_lower: percolation based on the lower layer storage</li>
+<li>perc_nodrain: no percolation, but infiltration (direct splitting overland; Hymod)</li>
+<li>perc_tresh:  percolation based on both layers</li>
+</ol>
+</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>parameters</strong> : dictionary</p>
+<blockquote>
+<div><p>Dictionary containing all the model parameters</p>
+</div></blockquote>
+<p><strong>options: dictionary</strong></p>
+<blockquote class="last">
+<div><p>Dictionary containting all the model structure options</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="13%" />
+<col width="87%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>STATES: dict</td>
+<td>Dictionary containing all the model states of the current calculation time step</td>
+</tr>
+<tr class="row-even"><td>FLUXES: dict</td>
+<td>Dictionary containting all the fluxes structure options</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="6%" />
+<col width="94%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>calc(STATES,FLUXES)</td>
+<td>The calc method picks the correct definition based on the options dictionary defined by the mode structure</td>
+</tr>
+<tr class="row-even"><td>perc_tresh(STATES,FLUXES)</td>
+<td>Treshold calculation of the percolation. When using surface storage, percolation is linear related to the surface storage and the upper layer tension storage, in all other cases the tension storage of the lower layer influences the amount of percolation  Model States: S1F, S2T (or S1T when surface1_1 option in upper layer)  Model Parameters: tg, S1Fmax, S2Tmax (or S1Tmax when surface1_1 option in upper layer)  Fluxes updated: q12</td>
+</tr>
+<tr class="row-odd"><td>perc_nodrain(STATES,FLUXES)</td>
+<td>Hymod approach, with separating of the excess runoff in baseflow and surface component. The baseflow component is here identified by the percolation and the lower layer is conceptualized as baseflow routing.  Model States: none, since purely dependent from qsx-FLUX  Model Parameters: alfah  Fluxes updated: q12</td>
+</tr>
+<tr class="row-even"><td>perc_w2sat(STATES,FLUXES)</td>
+<td>Percolation in function of the upper layer soil storage, with in general large values for parameter c to limit drainage below field capacity.  Model States: S1  Model Parameters: S1max, c  Fluxes updated: q12</td>
+</tr>
+<tr class="row-odd"><td>perc_f2sat(STATES,FLUXES)</td>
+<td>Percolation in function of the free upper layer soil storage, with in general values for parameter c close to unity.  Model States: S1F  Model Parameters: ku,S1Fmax,c  Fluxes updated: q12</td>
+</tr>
+<tr class="row-even"><td>perc_lower(STATES,FLUXES)</td>
+<td>Percolation in function of the free upper layer soil storage, with in general values for parameter c close to unity.  Model States: S1F, S2  Model Parameters: S1Fmax, alfa, S2max, psi qbsat is calculated in function of the selected lower layer option  Fluxes updated: q12</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="pyfuse.Percolation.calc_Qbsat">
+<code class="descname">calc_Qbsat</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyfuse/fluxes.html#Percolation.calc_Qbsat"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyfuse.Percolation.calc_Qbsat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Help function of the percolation class,
+calculates the maximum baseflow in function of the lower layer options</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">qbsat (q0 in model description)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="interflow">
+<h2>Interflow<a class="headerlink" href="#interflow" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="pyfuse.Interflow">
+<em class="property">class </em><code class="descclassname">pyfuse.</code><code class="descname">Interflow</code><span class="sig-paren">(</span><em>parameters</em>, <em>options</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyfuse/fluxes.html#Interflow"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyfuse.Interflow" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Class for Percolation fluxes calculation, with 3 implemented options:</dt>
+<dd><ol class="first last arabic simple">
+<li>intflwnone: no interflow (hypodermic flow)</li>
+<li>intflwsome: linear extraction of free storage</li>
+<li>intflwtresh: threshold based interflow of upper layer</li>
+</ol>
+</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>parameters</strong> : dictionary</p>
+<blockquote>
+<div><p>Dictionary containing all the model parameters</p>
+</div></blockquote>
+<p><strong>options: dictionary</strong></p>
+<blockquote class="last">
+<div><p>Dictionary containting all the model structure options</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="13%" />
+<col width="87%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>STATES: dict</td>
+<td>Dictionary containing all the model states of the current calculation time step</td>
+</tr>
+<tr class="row-even"><td>FLUXES: dict</td>
+<td>Dictionary containting all the fluxes structure options</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>calc(STATES,FLUXES)</td>
+<td>The calc method picks the correct definition based on the options dictionary defined by the mode structure</td>
+</tr>
+<tr class="row-even"><td>intflwnone(STATES,FLUXES)</td>
+<td>No interflow, like in TOPMODEL and ARNO/VIC  Model States: none  Model Parameters: none  Fluxes updated: qif = 0.0</td>
+</tr>
+<tr class="row-odd"><td>intflwsome(STATES,FLUXES)</td>
+<td>Linear interflow conceptualization from free storage  Model States: S1F  Model Parameters: ki, S1Fmax  Fluxes updated: qif</td>
+</tr>
+<tr class="row-even"><td>intflwtresh(STATES,FLUXES)</td>
+<td>Linear interflow conceptualization from free storage if above threshold  Model States: S1F, S2T (or S1T if surface1_1 option for upper layer)  Model Parameters: ki, tif, S2Tmax (or S1Tmax if surface1_1 option for upper layer)  Fluxes updated: qif</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="surface">
+<h2>Surface<a class="headerlink" href="#surface" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="pyfuse.Surface">
+<em class="property">class </em><code class="descclassname">pyfuse.</code><code class="descname">Surface</code><span class="sig-paren">(</span><em>parameters</em>, <em>options</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyfuse/fluxes.html#Surface"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyfuse.Surface" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Class for Surface fluxes calculation, with 4 implemented options:</dt>
+<dd><ol class="first arabic simple">
+<li>arno_x_vic: Probability distribution style (cfr.Variable Infiltration Concept)</li>
+<li>prms_varnt: PRMS model concept</li>
+<li>tmdl_param: power law transmissivity profile TOPMODEL</li>
+</ol>
+<p class="last">4. oflwtresh: surface flow when above threshold
+(5. testeasy:  only for testing purposes)</p>
+</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>parameters</strong> : dictionary</p>
+<blockquote>
+<div><p>Dictionary containing all the model parameters</p>
+</div></blockquote>
+<p><strong>options: dictionary</strong></p>
+<blockquote class="last">
+<div><p>Dictionary containting all the model structure options</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="13%" />
+<col width="87%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>STATES: dict</td>
+<td>Dictionary containing all the model states of the current calculation time step</td>
+</tr>
+<tr class="row-even"><td>FLUXES: dict</td>
+<td>Dictionary containting all the fluxes structure options</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="6%" />
+<col width="94%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>calc(STATES,FLUXES)</td>
+<td>The calc method picks the correct definition based on the options dictionary defined by the mode structure</td>
+</tr>
+<tr class="row-even"><td>arno_x_vic(STATES,FLUXES)</td>
+<td>VIC conceptualization for surface storage (or Pareto distribution in Moore-PDM concept)  Model States: S1  Model Parameters: S1max, b alfah if percolation based on hymod concep  Fluxes updated: qsx</td>
+</tr>
+<tr class="row-odd"><td>prms_varnt(STATES,FLUXES)</td>
+<td>PRMS conceptualization for surface storage, linea dependence, catchment conceptualized as one reservoir  Model States: S1T  Model Parameters: S1Tmax, Acmax alfah if percolation based on hymod concept  Fluxes updated: qsx</td>
+</tr>
+<tr class="row-even"><td>tmdl_param(STATES,FLUXES)</td>
+<td>TOPMODEL conceptualization for surface storage, based on the topographic distribution function  Model States: S2  Model Parameters: S2max, maxpow (derived), loglambda, chi, n alfah if percolation based on hymod concept  Fluxes updated: qsx  Implementation for FUSE [1] is not really 3-par version, but interpretation of the 1 parameter as described in [2], but are essentially the same, see utilities -&gt; gammadistr.py file</td>
+</tr>
+<tr class="row-odd"><td>oflwtresh(STATES,FLUXES)</td>
+<td>Threshold conceptualization for surface storage (cfr. NAM model), catchment conceptualized as one reservoir  Model States: S2T (S1T when surface1_1 upper layer option)  Model Parameters: ko, tof, S2Tmax (S1Tmax when surface1_1 upper layer option) alfah if percolation based on hymod concept  Fluxes updated: qsx</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="pyfuse.Surface.testeasy">
+<code class="descname">testeasy</code><span class="sig-paren">(</span><em>STATES</em>, <em>FLUXES</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyfuse/fluxes.html#Surface.testeasy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyfuse.Surface.testeasy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Only for testing purposes!</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="base-flow">
+<h2>Base flow<a class="headerlink" href="#base-flow" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="pyfuse.Baseflow">
+<em class="property">class </em><code class="descclassname">pyfuse.</code><code class="descname">Baseflow</code><span class="sig-paren">(</span><em>parameters</em>, <em>options</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyfuse/fluxes.html#Baseflow"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyfuse.Baseflow" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Class for Base Flow and lower layer calculation, with 4 implemented options:</dt>
+<dd><ol class="first last arabic simple">
+<li>tens2pll_2: Two parallel reservoirs</li>
+<li>unlimfrc_2: Storage of unlimited size</li>
+<li>unlimpow_2: TOPMODEL adaptive version</li>
+<li>fixedsiz_2: Storage of fixed size</li>
+</ol>
+</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>parameters</strong> : dictionary</p>
+<blockquote>
+<div><p>Dictionary containing all the model parameters</p>
+</div></blockquote>
+<p><strong>options: dictionary</strong></p>
+<blockquote class="last">
+<div><p>Dictionary containting all the model structure options</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="13%" />
+<col width="87%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>STATES: dict</td>
+<td>Dictionary containing all the model states of the current calculation time step</td>
+</tr>
+<tr class="row-even"><td>FLUXES: dict</td>
+<td>Dictionary containting all the fluxes structure options</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="8%" />
+<col width="92%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>calc(STATES,FLUXES)</td>
+<td>The calc method picks the correct definition based on the options dictionary defined by the mode structure</td>
+</tr>
+<tr class="row-even"><td>tens2pll_2(STATES,FLUXES)</td>
+<td>Two parallel linear reservoirs used in conjunction with 2 parallel reservoirs in state equations  Model States: S2FA, S2FB  Model Parameters: vA, vB  Fluxes updated: qbA, qbB, qb</td>
+</tr>
+<tr class="row-odd"><td>unlimfrc_2(STATES,FLUXES)</td>
+<td>Linear or non-linear reservoir used in combination with a single reservoir of infinite size  Model States: S2  Model Parameters: n, v  Fluxes updated: qb</td>
+</tr>
+<tr class="row-even"><td>unlimpow_2(STATES,FLUXES)</td>
+<td>Non-linear reservoir used in combination with a single reservoir of infinite size; used to conceptualize the TOPMODEL parameterization of the power law transmissivity profile  Model States: S2  Model Parameters: n, S2max qbsat is calculated in function of the selected lower layer option  Fluxes updated: qb</td>
+</tr>
+<tr class="row-odd"><td>fixedsiz_2(STATES,FLUXES)</td>
+<td>Linear or Non-linear reservoir used in combination with a single reservoir of fixed size  Model States: S2  Model Parameters: ks, n, S2max  Fluxes updated: qb</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="routing">
+<h2>Routing<a class="headerlink" href="#routing" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="pyfuse.Routing">
+<em class="property">class </em><code class="descclassname">pyfuse.</code><code class="descname">Routing</code><span class="sig-paren">(</span><em>parameters</em>, <em>options</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyfuse/fluxes.html#Routing"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyfuse.Routing" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Class for Routingof the relevant subflows with 3 options:</dt>
+<dd><ol class="first last arabic simple">
+<li>rout_all1: routing the subflows combined</li>
+<li>no_rout: no routing</li>
+<li>rout_ind: routing the subflow indeividual</li>
+</ol>
+</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>parameters</strong> : dictionary</p>
+<blockquote>
+<div><p>Dictionary containing all the model parameters</p>
+</div></blockquote>
+<p><strong>options: dictionary</strong></p>
+<blockquote class="last">
+<div><p>Dictionary containting all the model structure options</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p>TODO: make also gamma distribution based to enable also non-integer reservoir value
+<a class="reference external" href="https://github.com/cvitolo/r_fuse/blob/master/fuse/src/fuse.cpp">https://github.com/cvitolo/r_fuse/blob/master/fuse/src/fuse.cpp</a> lijn 114!</p>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="12%" />
+<col width="88%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>STATES: dict</td>
+<td>Dictionary containing all the model states of the current calculation time step</td>
+</tr>
+<tr class="row-even"><td>FLUXES: dict</td>
+<td>Dictionary containting all the fluxes structure options</td>
+</tr>
+<tr class="row-odd"><td>ROUTLIB: dict</td>
+<td>Dictionary containting all the routing characteristics when using linear reservoirs convolution</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="12%" />
+<col width="88%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>calc(STATES,FLUXES,ROUTLIB)</td>
+<td>The calc method picks the correct definition based on the options dictionary defined by the mode structure</td>
+</tr>
+<tr class="row-even"><td>rout_all1(STATES,FLUXES)</td>
+<td>Routing of the sum of all subflows  Model States: none, analytical solution used based on fluxes only  Model Parameters: frac_future (derived from number of reservoirs and residence parameter)  Fluxes updated: qgamma, qfuture, q_all</td>
+</tr>
+<tr class="row-odd"><td>no_rout(STATES,FLUXES)</td>
+<td>No routing, subflows are summed for each time stepq_all  Model States: none  Model Parameters: none  Fluxes updated: q_all</td>
+</tr>
+<tr class="row-even"><td>rout_ind(STATES,FLUXES,ROUTLIB)</td>
+<td>Individual routing of the subflows  Model States: none, analytical solution used based on fluxes only  Model Parameters: timeo,timei,timeb  Fluxes updated: q_all, routover, routinter, routbase</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="miscellaneous-bucket-overflow">
+<h2>Miscellaneous bucket overflow<a class="headerlink" href="#miscellaneous-bucket-overflow" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="pyfuse.Misscell">
+<em class="property">class </em><code class="descclassname">pyfuse.</code><code class="descname">Misscell</code><span class="sig-paren">(</span><em>parameters</em>, <em>options</em>, <em>solver=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyfuse/fluxes.html#Misscell"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyfuse.Misscell" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class for miscellaneous bucket overflow fluxes as an automatic consequence
+of the selected options in upper and lower layer, using logistic smoothing
+functions to prevent from dicontinuities.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>parameters</strong> : dictionary</p>
+<blockquote>
+<div><p>Dictionary containing all the model parameters</p>
+</div></blockquote>
+<p><strong>options: dictionary</strong></p>
+<blockquote class="last">
+<div><p>Dictionary containting all the model structure options</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><code class="xref py py-obj docutils literal"><span class="pre">pyFUSE.Logistic</span></code></dt>
+<dd>For the logistic smoother used</dd>
+</dl>
+</div>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="13%" />
+<col width="87%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>STATES: dict</td>
+<td>Dictionary containing all the model states of the current calculation time step</td>
+</tr>
+<tr class="row-even"><td>FLUXES: dict</td>
+<td>Dictionary containting all the fluxes structure options</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="pyfuse.Misscell.calc">
+<code class="descname">calc</code><span class="sig-paren">(</span><em>STATES</em>, <em>FLUXES</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyfuse/fluxes.html#Misscell.calc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyfuse.Misscell.calc" title="Permalink to this definition">¶</a></dt>
+<dd><p>The calc method picks the correct definition based on the options dictionary defined by the mode structure</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>STATES</strong> : dictionary</p>
+<blockquote>
+<div><p>Dictionary containing all the model states of the current calculation time step</p>
+</div></blockquote>
+<p><strong>FLUXES: dictionary</strong></p>
+<blockquote>
+<div><p>Dictionary containting all the fluxes structure options, updated by the flux calculation</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">FLUXES: dictionary</p>
+<blockquote class="last">
+<div><p>updated values</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyfuse.Misscell.fixedsiz_2">
+<code class="descname">fixedsiz_2</code><span class="sig-paren">(</span><em>STATES</em>, <em>FLUXES</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyfuse/fluxes.html#Misscell.fixedsiz_2"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyfuse.Misscell.fixedsiz_2" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>States</dt>
+<dd>S2</dd>
+<dt>Parameters</dt>
+<dd>S2</dd>
+<dt>FLUXES: dictionary</dt>
+<dd>updated by the percolation calculation: qsfof</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyfuse.Misscell.no_limit">
+<code class="descname">no_limit</code><span class="sig-paren">(</span><em>STATES</em>, <em>FLUXES</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyfuse/fluxes.html#Misscell.no_limit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyfuse.Misscell.no_limit" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>States</dt>
+<dd>none</dd>
+<dt>Parameters</dt>
+<dd>none</dd>
+<dt>FLUXES: dictionary</dt>
+<dd>updated by the percolation calculation: qsfof=0.0</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyfuse.Misscell.onestate_1">
+<code class="descname">onestate_1</code><span class="sig-paren">(</span><em>STATES</em>, <em>FLUXES</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyfuse/fluxes.html#Misscell.onestate_1"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyfuse.Misscell.onestate_1" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>States</dt>
+<dd>S1</dd>
+<dt>Parameters</dt>
+<dd>S1max</dd>
+<dt>FLUXES: dictionary</dt>
+<dd>updated by the percolation calculation: qufof</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyfuse.Misscell.surface1_1">
+<code class="descname">surface1_1</code><span class="sig-paren">(</span><em>STATES</em>, <em>FLUXES</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyfuse/fluxes.html#Misscell.surface1_1"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyfuse.Misscell.surface1_1" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>States</dt>
+<dd>S1F</dd>
+<dt>Parameters</dt>
+<dd>S1Fmax</dd>
+<dt>FLUXES: dictionary</dt>
+<dd>updated by the percolation calculation: qstof</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyfuse.Misscell.tens2pll_2">
+<code class="descname">tens2pll_2</code><span class="sig-paren">(</span><em>STATES</em>, <em>FLUXES</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyfuse/fluxes.html#Misscell.tens2pll_2"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyfuse.Misscell.tens2pll_2" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>States</dt>
+<dd>S2T, S2FA, S2FB</dd>
+<dt>Parameters</dt>
+<dd>S2Tmax, S2FAmax, S2FBmax, kappa</dd>
+<dt>FLUXES: dictionary</dt>
+<dd>updated by the percolation calculation: qstof, qsfofa, qsfofb, qsfof</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyfuse.Misscell.tension1_1">
+<code class="descname">tension1_1</code><span class="sig-paren">(</span><em>STATES</em>, <em>FLUXES</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyfuse/fluxes.html#Misscell.tension1_1"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyfuse.Misscell.tension1_1" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>States</dt>
+<dd>S1T,S1F</dd>
+<dt>Parameters</dt>
+<dd>S1Tmax, S1Fmax</dd>
+<dt>FLUXES: dictionary</dt>
+<dd>updated by the percolation calculation: qutof, qufof</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyfuse.Misscell.tension2_1">
+<code class="descname">tension2_1</code><span class="sig-paren">(</span><em>STATES</em>, <em>FLUXES</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyfuse/fluxes.html#Misscell.tension2_1"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyfuse.Misscell.tension2_1" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>States</dt>
+<dd>S1TA,S1TB,S1F</dd>
+<dt>Parameters</dt>
+<dd>S1TAmax, S1TBmax, S1Fmax</dd>
+<dt>FLUXES: dictionary</dt>
+<dd>updated by the percolation calculation: qurof, qutof, qufof</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Fluxes</a><ul>
+<li><a class="reference internal" href="#evapotranspiration">Evapotranspiration</a></li>
+<li><a class="reference internal" href="#percolation">Percolation</a></li>
+<li><a class="reference internal" href="#interflow">Interflow</a></li>
+<li><a class="reference internal" href="#surface">Surface</a></li>
+<li><a class="reference internal" href="#base-flow">Base flow</a></li>
+<li><a class="reference internal" href="#routing">Routing</a></li>
+<li><a class="reference internal" href="#miscellaneous-bucket-overflow">Miscellaneous bucket overflow</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="pars.html"
+                        title="previous chapter">Model Parameters</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="distro.html"
+                        title="next chapter">Probability distribution function handling</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/fluxes.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="distro.html" title="Probability distribution function handling"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="pars.html" title="Model Parameters"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">pyfuse 1.0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2012, S. Van Hoey.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.5.
+    </div>
+  </body>
+</html>

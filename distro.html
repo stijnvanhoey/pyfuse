@@ -1,0 +1,275 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Probability distribution function handling &mdash; pyfuse 1.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="pyfuse 1.0.1 documentation" href="index.html" />
+    <link rel="next" title="Information dictionaries" href="info.html" />
+    <link rel="prev" title="Fluxes" href="fluxes.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="info.html" title="Information dictionaries"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="fluxes.html" title="Fluxes"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">pyfuse 1.0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="probability-distribution-function-handling">
+<h1>Probability distribution function handling<a class="headerlink" href="#probability-distribution-function-handling" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="pyfuse.randomUniform">
+<code class="descclassname">pyfuse.</code><code class="descname">randomUniform</code><span class="sig-paren">(</span><em>left=0.0</em>, <em>right=1.0</em>, <em>rnsize=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyfuse/distributions.html#randomUniform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyfuse.randomUniform" title="Permalink to this definition">¶</a></dt>
+<dd><p>link to uniform sampling of numpy, to remain consistency in names
+of the pyFUSE module</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>left: float</strong></p>
+<blockquote>
+<div><p>lower value</p>
+</div></blockquote>
+<p><strong>right: float</strong></p>
+<blockquote>
+<div><p>upper value</p>
+</div></blockquote>
+<p><strong>rnsize: int</strong></p>
+<blockquote class="last">
+<div><p>number of samples</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><code class="xref py py-obj docutils literal"><span class="pre">numpy.random.uniform</span></code></p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyfuse.randomTriangular">
+<code class="descclassname">pyfuse.</code><code class="descname">randomTriangular</code><span class="sig-paren">(</span><em>left=0.0</em>, <em>mode=None</em>, <em>right=1.0</em>, <em>rnsize=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyfuse/distributions.html#randomTriangular"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyfuse.randomTriangular" title="Permalink to this definition">¶</a></dt>
+<dd><p>link to triangular sampling of numpy, to remain consistency in names
+of the pyFUSE module</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>left: float</strong></p>
+<blockquote>
+<div><p>lower value</p>
+</div></blockquote>
+<p><strong>mode: float</strong></p>
+<blockquote>
+<div><p>value between left and right, highest probability</p>
+</div></blockquote>
+<p><strong>right: float</strong></p>
+<blockquote>
+<div><p>upper value</p>
+</div></blockquote>
+<p><strong>rnsize: int</strong></p>
+<blockquote class="last">
+<div><p>number of samples</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><code class="xref py py-obj docutils literal"><span class="pre">numpy.random.triangular</span></code></p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyfuse.randomTrapezoidal">
+<code class="descclassname">pyfuse.</code><code class="descname">randomTrapezoidal</code><span class="sig-paren">(</span><em>left=0.0</em>, <em>mode1=None</em>, <em>mode2=None</em>, <em>right=1.0</em>, <em>rnsize=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyfuse/distributions.html#randomTrapezoidal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyfuse.randomTrapezoidal" title="Permalink to this definition">¶</a></dt>
+<dd><p>random sampling from trapezoidal function</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>left: float</strong></p>
+<blockquote>
+<div><p>lower value</p>
+</div></blockquote>
+<p><strong>mode1: float</strong></p>
+<blockquote>
+<div><p>value between left and right, highest probability left side</p>
+</div></blockquote>
+<p><strong>mode2: float</strong></p>
+<blockquote>
+<div><p>value between left and right, highest probability right side</p>
+</div></blockquote>
+<p><strong>right: float</strong></p>
+<blockquote>
+<div><p>upper value</p>
+</div></blockquote>
+<p><strong>rnsize: int</strong></p>
+<blockquote class="last">
+<div><p>number of samples</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyfuse.randomNormal">
+<code class="descclassname">pyfuse.</code><code class="descname">randomNormal</code><span class="sig-paren">(</span><em>mu=0.0</em>, <em>sigma=1.0</em>, <em>rnsize=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyfuse/distributions.html#randomNormal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyfuse.randomNormal" title="Permalink to this definition">¶</a></dt>
+<dd><p>link to sampling of normal distribution of numpy, to remain consistency in names
+of the pyFUSE module</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>mu: float</strong></p>
+<blockquote>
+<div><p>mean value</p>
+</div></blockquote>
+<p><strong>sigma: float</strong></p>
+<blockquote>
+<div><p>Standard deviation (spread or &#8216;width&#8217;) of the distribution</p>
+</div></blockquote>
+<p><strong>rnsize: int</strong></p>
+<blockquote class="last">
+<div><p>number of samples</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><code class="xref py py-obj docutils literal"><span class="pre">numpy.random.normal</span></code></p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyfuse.randomLogNormal">
+<code class="descclassname">pyfuse.</code><code class="descname">randomLogNormal</code><span class="sig-paren">(</span><em>mu=0.0</em>, <em>sigma=1.0</em>, <em>rnsize=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyfuse/distributions.html#randomLogNormal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyfuse.randomLogNormal" title="Permalink to this definition">¶</a></dt>
+<dd><p>link to sampling of lognormal distribution of numpy, to remain consistency in names
+of the pyFUSE module</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>mu: float</strong></p>
+<blockquote>
+<div><p>Mean value of the underlying normal distribution</p>
+</div></blockquote>
+<p><strong>sigma: float</strong></p>
+<blockquote>
+<div><p>Standard deviation of the underlying normal distribution</p>
+</div></blockquote>
+<p><strong>rnsize: int</strong></p>
+<blockquote class="last">
+<div><p>number of samples</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><code class="xref py py-obj docutils literal"><span class="pre">numpy.random.lognormal</span></code></p>
+</div>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="fluxes.html"
+                        title="previous chapter">Fluxes</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="info.html"
+                        title="next chapter">Information dictionaries</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/distro.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="info.html" title="Information dictionaries"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="fluxes.html" title="Fluxes"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">pyfuse 1.0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2012, S. Van Hoey.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.5.
+    </div>
+  </body>
+</html>

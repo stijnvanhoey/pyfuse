@@ -1,0 +1,242 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Information dictionaries &mdash; pyfuse 1.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="pyfuse 1.0.1 documentation" href="index.html" />
+    <link rel="next" title="Extra Functions" href="extra.html" />
+    <link rel="prev" title="Probability distribution function handling" href="distro.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="extra.html" title="Extra Functions"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="distro.html" title="Probability distribution function handling"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">pyfuse 1.0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="information-dictionaries">
+<h1>Information dictionaries<a class="headerlink" href="#information-dictionaries" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="pyfuse.all_options">
+<code class="descclassname">pyfuse.</code><code class="descname">all_options</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyfuse/infodicts.html#all_options"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyfuse.all_options" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a print out of all possible fluxes of all model combinations possible to select</p>
+<ol class="arabic">
+<li><p class="first">upper-layer architecture</p>
+<dl class="docutils">
+<dt>tension1_1:</dt>
+<dd><p class="first last">upper layer broken up into tension and free storage</p>
+</dd>
+<dt>tension2_1:</dt>
+<dd><p class="first last">tension storage sub-divided into recharge and excess</p>
+</dd>
+<dt>onestate_1:</dt>
+<dd><p class="first last">upper layer defined by a single state variable</p>
+</dd>
+<dt>surface1_1:</dt>
+<dd><p class="first last">upper layer defined by a surface storage representing and a tension reservoir</p>
+</dd>
+</dl>
+</li>
+<li><p class="first">lower-layer architecture and baseflow</p>
+<dl class="docutils">
+<dt>tens2pll_2:</dt>
+<dd><p class="first last">tension reservoir plus two parallel tanks</p>
+</dd>
+<dt>unlimfrc_2:</dt>
+<dd><p class="first last">baseflow resvr of unlimited size (0-HUGE), frac rate</p>
+</dd>
+<dt>unlimpow_2:</dt>
+<dd><p class="first last">baseflow resvr of unlimited size (0-HUGE), power recession</p>
+</dd>
+<dt>fixedsiz_2:</dt>
+<dd><p class="first last">baseflow reservoir of fixed size</p>
+</dd>
+</dl>
+</li>
+<li><p class="first">surface runoff</p>
+<dl class="docutils">
+<dt>arno_x_vic:</dt>
+<dd><p class="first last">ARNO/Xzang/VIC parameterization (upper zone control)</p>
+</dd>
+<dt>prms_varnt:</dt>
+<dd><p class="first last">PRMS variant (fraction of upper tension storage)</p>
+</dd>
+<dt>tmdl_param:</dt>
+<dd><p class="first last">TOPMODEL parameterization (only valid for TOPMODEL qb)</p>
+</dd>
+<dt>oflwtresh:</dt>
+<dd><p class="first last">threshold based overland flow generation</p>
+</dd>
+</dl>
+</li>
+<li><p class="first">percolation</p>
+<dl class="docutils">
+<dt>perc_f2sat:</dt>
+<dd><p class="first last">water from (field cap to sat) avail for percolation</p>
+</dd>
+<dt>perc_w2sat:</dt>
+<dd><p class="first last">water from (wilt pt to sat) avail for percolation</p>
+</dd>
+<dt>perc_lower:</dt>
+<dd><p class="first last">perc defined by moisture content in lower layer (SAC)</p>
+</dd>
+<dt>perc_tresh:</dt>
+<dd><p class="first last">threshold based percolation</p>
+</dd>
+<dt>perc_nodrain:</dt>
+<dd><p class="first last">percolation represents the baseflow routing</p>
+</dd>
+</dl>
+</li>
+<li><p class="first">evaporation</p>
+<dl class="docutils">
+<dt>sequential:</dt>
+<dd><p class="first last">sequential evaporation model</p>
+</dd>
+<dt>rootweight:</dt>
+<dd><p class="first last">root weighting</p>
+</dd>
+</dl>
+</li>
+<li><p class="first">interflow</p>
+<dl class="docutils">
+<dt>intflwnone:</dt>
+<dd><p class="first last">no interflow</p>
+</dd>
+<dt>intflwsome:</dt>
+<dd><p class="first last">linear interflow</p>
+</dd>
+<dt>intflwtresh:</dt>
+<dd><p class="first last">threshold based interflow generation</p>
+</dd>
+</dl>
+</li>
+<li><p class="first">time delay in runoff</p>
+<dl class="docutils">
+<dt>rout_all1:</dt>
+<dd><p class="first last">use a Gamma distribution with shape parameter = 2.5 to rout combined flow</p>
+</dd>
+<dt>no_rout:</dt>
+<dd><p class="first last">no routing</p>
+</dd>
+<dt>rout_ind:</dt>
+<dd><p class="first last">rout subflows individual</p>
+</dd>
+</dl>
+</li>
+</ol>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyfuse.all_states">
+<code class="descclassname">pyfuse.</code><code class="descname">all_states</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyfuse/infodicts.html#all_states"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyfuse.all_states" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a print of all possible states of all model combinations</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyfuse.all_fluxes">
+<code class="descclassname">pyfuse.</code><code class="descname">all_fluxes</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyfuse/infodicts.html#all_fluxes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyfuse.all_fluxes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a print of  all possible fluxes of all model combinations possible to select</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyfuse.all_pars_info">
+<code class="descclassname">pyfuse.</code><code class="descname">all_pars_info</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyfuse/infodicts.html#all_pars_info"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyfuse.all_pars_info" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a print of all possible parameters of all model combinations</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="distro.html"
+                        title="previous chapter">Probability distribution function handling</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="extra.html"
+                        title="next chapter">Extra Functions</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/info.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="extra.html" title="Extra Functions"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="distro.html" title="Probability distribution function handling"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">pyfuse 1.0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2012, S. Van Hoey.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.5.
+    </div>
+  </body>
+</html>

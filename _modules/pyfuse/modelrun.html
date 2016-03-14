@@ -1,0 +1,1353 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pyfuse.modelrun &mdash; pyfuse 1.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="pyfuse 1.0.1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">pyfuse 1.0.1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for pyfuse.modelrun</h1><div class="highlight"><pre>
+<span></span><span class="c1">#-------------------------------------------------------------------------------</span>
+<span class="c1"># Name:        FUSE style FLEXIBLE HYDROLOGICAL MODEL</span>
+<span class="c1"># Purpose:     extend the functionalities of the FORTRAN implementation by Clark</span>
+<span class="c1">#</span>
+<span class="c1"># Author:      vhoeys</span>
+<span class="c1">#</span>
+<span class="c1"># Created:</span>
+<span class="c1"># Copyright:   (c) vhoeys 2011</span>
+<span class="c1"># Licence:     &lt;your licence&gt;</span>
+<span class="c1">#-------------------------------------------------------------------------------</span>
+<span class="c1">#!/usr/bin/env python</span>
+
+<span class="c1">#import os</span>
+<span class="c1">#import sys</span>
+<span class="c1">#</span>
+<span class="c1">#import time</span>
+<span class="c1">#import random</span>
+<span class="c1">#import math</span>
+
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+
+<span class="c1">#import fileinput</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">h5py</span>
+<span class="kn">import</span> <span class="nn">time</span>
+
+<span class="kn">from</span> <span class="nn">scipy.interpolate</span> <span class="kn">import</span> <span class="n">interp1d</span>
+<span class="kn">from</span> <span class="nn">scipy.integrate</span> <span class="kn">import</span> <span class="n">odeint</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">odespy</span>
+    <span class="n">odespy_import</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="k">except</span><span class="p">:</span>
+    <span class="n">odespy_import</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Odespy was not found, ODE integration is limited to &#39;odeint&#39;!&quot;</span><span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">pyfuse.distributions</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">pyfuse.fluxes</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">pyfuse.modelsetup</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">pyfuse.parameter</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="c1">###############################################################################</span>
+<span class="c1">###   MODEL ENVIRONMENT</span>
+<span class="c1">###############################################################################</span>
+
+<div class="viewcode-block" id="pyFUSE"><a class="viewcode-back" href="../../model.html#pyfuse.pyFUSE">[docs]</a><span class="k">class</span> <span class="nc">pyFUSE</span><span class="p">():</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Create pyFUSE hydrological model, a python version and extention of the FORTRAN</span>
+<span class="sd">    FUSE model environment by Clarke, 2008 [1]</span>
+<span class="sd">    This is not a wrapper of the Fortran implementation of Clark, but a</span>
+<span class="sd">    complete rewrite of the original code in order to make further extensions</span>
+<span class="sd">    easier.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ------------</span>
+<span class="sd">    name: str</span>
+<span class="sd">        A given name for the constructed model structure</span>
+<span class="sd">    OPTIONS: dict</span>
+<span class="sd">        Dictionary with the model options for construction</span>
+<span class="sd">    PARS: dict</span>
+<span class="sd">        Dictionary of parameters used for the model evaluation, coming from</span>
+<span class="sd">        input parameter file</span>
+<span class="sd">    RAIN: array</span>
+<span class="sd">        numpy array containting the rainfall data</span>
+<span class="sd">    EVAPO: array</span>
+<span class="sd">        numpy array containting the potential evapotranspiration data,</span>
+<span class="sd">        with same time frame and resolution as the rain</span>
+<span class="sd">    CONST: dict</span>
+<span class="sd">        dictionary of neede constant values for the model configuration and</span>
+<span class="sd">        calculation</span>
+<span class="sd">    INITFRAC: float</span>
+<span class="sd">        fraction of maximum storage used as initial condition</span>
+
+<span class="sd">    References</span>
+<span class="sd">    -------------</span>
+
+<span class="sd">    [1] Clark, Martyn P., A. G. Slater, D. E. Rupp, R. A. Woods, Jasper A.</span>
+<span class="sd">    Vrugt, H. V. Gupta, Thorsten Wagener, and L. E. Hay. Framework for</span>
+<span class="sd">    Understanding Structural Errors (FUSE): A modular framework to diagnose</span>
+<span class="sd">    differences between hydrological models. Water Resources Research 44 (2008): 14.</span>
+
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">OPTIONS</span><span class="p">,</span> <span class="n">PARS</span><span class="p">,</span> <span class="n">RAIN</span><span class="p">,</span>
+                 <span class="n">EVAPO</span><span class="p">,</span> <span class="n">CONST</span><span class="p">,</span> <span class="n">INITFRAC</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">oldfile</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        initiate the model structure:</span>
+<span class="sd">            get pars extraction</span>
+<span class="sd">            get constants</span>
+<span class="sd">            get rain/evapo data</span>
+
+<span class="sd">        for initial conditions: automated fraction of stores, with frac-par</span>
+
+<span class="sd">        RAIN en EVAPO: timeseries from same length: defining the simulation times</span>
+
+<span class="sd">        See literature:</span>
+<span class="sd">        Clark, Martyn P., A. G. Slater, D. E. Rupp, R. A. Woods, Jasper A.</span>
+<span class="sd">        Vrugt, H. V. Gupta, Thorsten Wagener, and L. E. Hay. Framework for</span>
+<span class="sd">        Understanding Structural Errors (FUSE): A modular framework to diagnose</span>
+<span class="sd">        differences between hydrological models. Water Resources Research 44</span>
+<span class="sd">        (2008): 14.</span>
+
+<span class="sd">        Original fortran code from Clark, Martyn P.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="c1">#cONTROL INPUT INSTANCES</span>
+        <span class="c1">##################################</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">name</span><span class="p">,</span><span class="nb">str</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">OPTIONS</span><span class="p">,</span><span class="nb">dict</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">OPTIONS</span><span class="o">=</span><span class="n">OPTIONS</span>
+
+        <span class="c1">#LOAD PARAMETERS</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mcpossible</span><span class="o">=</span><span class="bp">True</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">PARS</span><span class="p">,</span><span class="nb">str</span><span class="p">):</span>
+            <span class="k">print</span> <span class="s1">&#39;Parameterfile used&#39;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span> <span class="o">=</span> <span class="n">Set_pars</span><span class="p">(</span><span class="n">PARS</span><span class="p">)</span> <span class="c1">#parameters: dictionary with all information (dict of Modpars)</span>
+            <span class="k">print</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">PARS</span> <span class="o">=</span> <span class="n">Set_pars_for_run</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">)</span>
+            <span class="k">print</span> <span class="bp">self</span><span class="o">.</span><span class="n">PARS</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">PARS</span><span class="o">.</span><span class="n">values</span><span class="p">()[</span><span class="mi">0</span><span class="p">],</span><span class="n">ModPar</span><span class="p">):</span>
+            <span class="k">print</span> <span class="s1">&#39;Parameter library with distribution info&#39;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="o">=</span><span class="n">PARS</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">PARS</span> <span class="o">=</span> <span class="n">Set_pars_for_run</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">PARS</span><span class="o">.</span><span class="n">values</span><span class="p">()[</span><span class="mi">0</span><span class="p">],</span><span class="nb">float</span><span class="p">):</span>
+            <span class="k">print</span> <span class="s1">&#39;Parameter only values used&#39;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">PARS</span> <span class="o">=</span> <span class="n">PARS</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mcpossible</span><span class="o">=</span><span class="bp">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;Bad parameter input type&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">CONST</span><span class="p">,</span><span class="nb">dict</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">CONST</span><span class="o">=</span><span class="n">CONST</span>
+
+        <span class="k">if</span> <span class="n">RAIN</span><span class="o">.</span><span class="n">size</span> <span class="o">&lt;&gt;</span> <span class="n">EVAPO</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;Timeserie length of RAIN and EVAPO need to be the same&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">RAIN</span><span class="o">=</span><span class="n">RAIN</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">EVAPO</span><span class="o">=</span><span class="n">EVAPO</span>
+            <span class="k">print</span> <span class="s1">&#39;Simulation of the model will run for </span><span class="si">%d</span><span class="s1"> timesteps&#39;</span> <span class="o">%</span><span class="n">RAIN</span><span class="o">.</span><span class="n">size</span>
+
+        <span class="c1">#Define the constants</span>
+        <span class="c1">##################################</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">area</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">CONST</span><span class="p">[</span><span class="s1">&#39;area&#39;</span><span class="p">])</span>     <span class="c1">#catchment area</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">CONST</span><span class="p">[</span><span class="s1">&#39;timestep&#39;</span><span class="p">])</span>  <span class="c1">#relative to the frequency of the rain input</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">totn</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">RAIN</span><span class="o">.</span><span class="n">size</span>
+
+        <span class="c1">#Define time-steps to run output for</span>
+        <span class="c1"># output to save is without last value</span>
+        <span class="c1">##################################</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">totaltime</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">totn</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">totaltimesteps</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">totaltime</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">dt</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time</span><span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">totaltime</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">totaltimesteps</span><span class="p">)</span> <span class="c1">#eg. hours if datainput hours and timestep=1.0; geeft mogelijkheid om met daginput ook uur-output te verkrijgen. NIET met uur ook dag (teveel gezever ivm hoe uurlijke info omzetten in dag, kan beter preprocessing zijn)</span>
+<span class="c1">#        self.time=np.arange(0,int(self.totaltime),int(self.dt))</span>
+
+        <span class="c1">#Prepare input data timeseries for linear interpolation in substepping</span>
+        <span class="c1">##################################</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time_int</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">totaltime</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">totaltime</span><span class="p">)</span>
+
+        <span class="c1">#add dummy value to rain and ET to make sure calculation runs enough timesteps</span>
+<span class="c1">#        self.RAIN=np.hstack((self.RAIN,np.zeros(2)))</span>
+<span class="c1">#        self.EVAPO=np.hstack((self.EVAPO,np.zeros(2)))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">rain_int</span> <span class="o">=</span> <span class="n">interp1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time_int</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">RAIN</span><span class="p">,</span><span class="n">kind</span><span class="o">=</span><span class="s1">&#39;nearest&#39;</span><span class="p">,</span><span class="n">bounds_error</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span><span class="n">fill_value</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">evapo_int</span> <span class="o">=</span> <span class="n">interp1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time_int</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">EVAPO</span><span class="p">,</span><span class="n">kind</span><span class="o">=</span><span class="s1">&#39;nearest&#39;</span><span class="p">,</span><span class="n">bounds_error</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span><span class="n">fill_value</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+
+        <span class="c1">#LOAD PARLIB and CREATE RELEVANT ONE BASED ON OPTIONS -&gt; get .optguess</span>
+        <span class="c1">##################################</span>
+        <span class="c1">#self.map_PARS()</span>
+
+        <span class="c1">#LOAD FLUXLIB and CREATE RELEVANT ONE BASED ON OPTIONS</span>
+        <span class="c1">##################################</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">map_ROUT</span><span class="p">()</span> <span class="c1">#volgorde belangrijk!</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">map_FLUXES</span><span class="p">()</span>
+
+        <span class="c1">#LOAD STATESLIB and CREATE RELEVANT ONE BASED ON OPTIONS</span>
+        <span class="c1">##################################</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">map_STATES</span><span class="p">()</span>
+        <span class="k">print</span> <span class="bp">self</span><span class="o">.</span><span class="n">STATES</span>
+
+        <span class="c1"># get fraction of total volume to start with</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">INITFRAC</span> <span class="o">=</span> <span class="n">INITFRAC</span>
+
+        <span class="c1">#Create hdf5 instance to put all outputs in</span>
+        <span class="c1">#the idea: a model creates a file; different conditions (length calc, parlength ...) different group -&gt; given in attr</span>
+        <span class="c1">#each flux and state is different dataset in the group</span>
+        <span class="c1">#################################</span>
+        <span class="k">if</span> <span class="n">oldfile</span> <span class="o">==</span> <span class="bp">False</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">[</span><span class="o">-</span><span class="mi">5</span><span class="p">:]</span><span class="o">==</span><span class="s1">&#39;.hdf5&#39;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">ofile</span> <span class="o">=</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span><span class="s1">&#39;w&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">[:</span><span class="o">-</span><span class="mi">5</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">hdf5main</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ofile</span><span class="o">.</span><span class="n">create_group</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">ofile</span> <span class="o">=</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="o">+</span><span class="s1">&#39;.hdf5&#39;</span><span class="p">,</span><span class="s1">&#39;w&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">hdf5main</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ofile</span><span class="o">.</span><span class="n">create_group</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">opt</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">hdf5main</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="n">opt</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">[</span><span class="n">opt</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+             <span class="bp">self</span><span class="o">.</span><span class="n">ofile</span> <span class="o">=</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="o">+</span><span class="s1">&#39;.hdf5&#39;</span><span class="p">,</span> <span class="s1">&#39;r+&#39;</span><span class="p">)</span>
+             <span class="bp">self</span><span class="o">.</span><span class="n">hdf5main</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ofile</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
+
+
+        <span class="c1">#MINI number to make sure some variables are never zero or below</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">xmini</span><span class="o">=</span><span class="mf">1e-6</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">ode_integrator</span> <span class="o">=</span> <span class="s1">&#39;odeint&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_use_odespy</span> <span class="o">=</span> <span class="bp">False</span>
+
+    <span class="k">def</span> <span class="nf">check_impossible_options</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Control method to check if the combined options are reasonable and</span>
+<span class="sd">        physically meaningful</span>
+
+<span class="sd">        TODO: make automatic and propose alternatives</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+<span class="c1">#                ! don&#39;t allow a lower tension tank when there are two upper ones</span>
+<span class="c1">#        IF (LIST_ARCH1(ISW_ARCH1)%MCOMPONENT(1:10).EQ.&#39;tension2_1&#39;.AND. &amp;</span>
+<span class="c1">#            LIST_ARCH2(ISW_ARCH2)%MCOMPONENT(1:10).EQ.&#39;tens2pll_2&#39;) CYCLE</span>
+<span class="c1">#        ! don&#39;t allow percolation below field capacity if there are multiple upper tanks</span>
+<span class="c1">#        IF (LIST_ARCH1(ISW_ARCH1)%MCOMPONENT(1:10).NE.&#39;onestate_1&#39;.AND. &amp;</span>
+<span class="c1">#            LIST_QPERC(ISW_QPERC)%MCOMPONENT(1:10).EQ.&#39;perc_w2sat&#39;) CYCLE</span>
+<span class="c1">#            idem voor tension1_1 en perc_w2sat !!</span>
+<span class="c1">#        freefirst evaporation not with tension2_1 =&gt; gelijke verdeling?!? dan niet</span>
+<span class="c1">#        onestate_1 en sequential is zelfde als onestate_1 en freefirst</span>
+<span class="c1">#</span>
+<span class="c1">#        linear ET enkel bij onelayer</span>
+<span class="c1">#                perc-nodrain only possible with overland-hymod en single linear baseflow?!?</span>
+
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">check_impossible_pars</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Control method to adapt parameters when values are not in correspondence</span>
+<span class="sd">        to eachother, e.g. both samples from distributions for Monte Carlo analysis</span>
+
+<span class="sd">        TODO: resample until good value</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">create_datasets</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">run_id</span><span class="p">,</span><span class="n">custom_period</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Based on the relevant fluxes and variables, the datasets for saving</span>
+<span class="sd">        in the hdf5 binary format are created.</span>
+
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="n">custom_period</span><span class="p">:</span>  <span class="c1">#adjust length of the datasets</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;not yet implemented&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1">#-1 timesteps, as timestep is not saved for flux, only calculated as dummy</span>
+            <span class="n">data_length_state</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">totaltimesteps</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="n">data_length_flux</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">totaltimesteps</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="c1">#CREATE GROUP FOR REQUESTED OUTPUT TIMESTEPS</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rungroup</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">hdf5main</span><span class="o">.</span><span class="n">create_group</span><span class="p">(</span><span class="n">run_id</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stategroup</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rungroup</span><span class="o">.</span><span class="n">create_group</span><span class="p">(</span><span class="s1">&#39;STATE&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">state</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">state_str</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stategroup</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s1">&#39;STATE_&#39;</span><span class="o">+</span><span class="n">state</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">data_length_state</span><span class="p">),),</span> <span class="s1">&#39;=f8&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">fluxgroup</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rungroup</span><span class="o">.</span><span class="n">create_group</span><span class="p">(</span><span class="s1">&#39;FLUX&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">flux</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux_str</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fluxgroup</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s1">&#39;FLUX_&#39;</span><span class="o">+</span><span class="n">flux</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">data_length_flux</span><span class="p">),),</span> <span class="s1">&#39;=f8&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">pargroup</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rungroup</span><span class="o">.</span><span class="n">create_group</span><span class="p">(</span><span class="s1">&#39;PAR&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">par</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">PARS</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">par</span> <span class="o">==</span> <span class="s1">&#39;frac_future&#39;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">pargroup</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s1">&#39;PAR_&#39;</span><span class="o">+</span><span class="n">par</span> <span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">PARS</span><span class="p">[</span><span class="s1">&#39;frac_future&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">size</span><span class="p">),),</span> <span class="s1">&#39;=f8&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">pargroup</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s1">&#39;PAR_&#39;</span><span class="o">+</span><span class="n">par</span> <span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="mi">1</span><span class="p">),),</span> <span class="s1">&#39;=f8&#39;</span><span class="p">)</span>
+
+
+        <span class="c1">#CREATE SEPERATE GROUP FOR ALL OUTPUT CALCULATION STEPS</span>
+        <span class="c1">#        self.rungroup=self.ofile.create_group(run_id+&#39;_ALLSTEPS&#39;)</span>
+
+    <span class="k">def</span> <span class="nf">statetoh5</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">run_id</span><span class="p">,</span><span class="n">y_out</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Save outputs in hdf5 arrays</span>
+
+<span class="sd">        Order of working is the same in init, odeint and state_str, making sure values are correct</span>
+<span class="sd">        states to save is [INIT t1... tn], so timesteps+1 length</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">cnt</span><span class="o">=</span><span class="mi">0</span>
+        <span class="k">for</span> <span class="n">st</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">state_str</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ofile</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="o">+</span><span class="s1">&#39;/&#39;</span><span class="o">+</span><span class="n">run_id</span><span class="o">+</span><span class="s1">&#39;/STATE/STATE_&#39;</span><span class="o">+</span><span class="n">st</span><span class="p">][:]</span> <span class="o">=</span> <span class="n">y_out</span><span class="p">[:,</span><span class="n">cnt</span><span class="p">]</span>
+            <span class="n">cnt</span><span class="o">+=</span><span class="mi">1</span>
+
+    <span class="k">def</span> <span class="nf">partoh5</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">run_id</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Save parameters of run in hdf5 arrays</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">for</span> <span class="n">par</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">PARS</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">par</span> <span class="o">==</span><span class="s1">&#39;frac_future&#39;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">ofile</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="o">+</span><span class="s1">&#39;/&#39;</span><span class="o">+</span><span class="n">run_id</span><span class="o">+</span><span class="s1">&#39;/PAR/PAR_&#39;</span><span class="o">+</span><span class="n">par</span><span class="p">][:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">PARS</span><span class="p">[</span><span class="n">par</span><span class="p">][:]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">ofile</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="o">+</span><span class="s1">&#39;/&#39;</span><span class="o">+</span><span class="n">run_id</span><span class="o">+</span><span class="s1">&#39;/PAR/PAR_&#39;</span><span class="o">+</span><span class="n">par</span><span class="p">][:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">PARS</span><span class="p">[</span><span class="n">par</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">fluxtoh5</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">run_id</span><span class="p">,</span><span class="n">y_out</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Save fluxes to h5</span>
+
+<span class="sd">        (implementation is not ideal and sensitive to mistakes)</span>
+<span class="sd">        fluxes to save is [t1.. tn], so timesteps length (1 shorter than length states)</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">data_length_flux</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">totaltimesteps</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">tstep</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">data_length_flux</span><span class="p">)):</span>
+            <span class="c1">#update of the states</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">state_lib_update</span><span class="p">(</span><span class="n">y_out</span><span class="p">[</span><span class="n">tstep</span><span class="p">,:])</span>
+            <span class="c1">#update of the rain,evapo</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;rain&#39;</span><span class="p">]</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">RAIN</span><span class="p">[</span><span class="n">tstep</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;pet&#39;</span><span class="p">]</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">EVAPO</span><span class="p">[</span><span class="n">tstep</span><span class="p">]</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">calc_fluxes</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">fl</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux_str</span><span class="p">:</span>
+                <span class="k">if</span> <span class="s1">&#39;rout&#39;</span> <span class="ow">in</span> <span class="n">fl</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">ofile</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="o">+</span><span class="s1">&#39;/&#39;</span><span class="o">+</span><span class="n">run_id</span><span class="o">+</span><span class="s1">&#39;/FLUX/FLUX_&#39;</span><span class="o">+</span><span class="n">fl</span><span class="p">][</span><span class="n">tstep</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="n">fl</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                <span class="k">elif</span> <span class="s1">&#39;qgamma&#39;</span> <span class="ow">in</span> <span class="n">fl</span><span class="p">:</span>
+                    <span class="k">pass</span>
+                <span class="k">elif</span> <span class="s1">&#39;qfuture&#39;</span> <span class="ow">in</span> <span class="n">fl</span><span class="p">:</span>
+                    <span class="k">pass</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">ofile</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="o">+</span><span class="s1">&#39;/&#39;</span><span class="o">+</span><span class="n">run_id</span><span class="o">+</span><span class="s1">&#39;/FLUX/FLUX_&#39;</span><span class="o">+</span><span class="n">fl</span><span class="p">][</span><span class="n">tstep</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="n">fl</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">map_PARS</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Only select and work with the relevant parameters for the model under consideration</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">map_ROUT</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Map only the relevant states to work with in the model</span>
+<span class="sd">        If routing is linear: the 3-integer string option need to be interpretedand translated in different structural options</span>
+<span class="sd">        If zero routing reservoirs, no extra fluxes are used in the model environment</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ROUTLIB</span><span class="o">=</span><span class="p">{}</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">[</span><span class="s1">&#39;routing&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;rout_ind&#39;</span><span class="p">:</span>
+            <span class="c1">#read the integer and translate in 3 options</span>
+<span class="c1">#            if type(self.OPTIONS[&#39;reservoirs&#39;]) is &#39;str&#39; and len(self.OPTIONS[&#39;reservoirs&#39;]) == 3:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">[</span><span class="s1">&#39;reservoirs&#39;</span><span class="p">],</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">[</span><span class="s1">&#39;reservoirs&#39;</span><span class="p">])</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">dummy</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">[</span><span class="s1">&#39;reservoirs&#39;</span><span class="p">])</span>
+                <span class="k">except</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;the reservoir option is not representing a combination of three integer values&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;Make sure the reservoir option is a 3-integer combination representing the number of reservoirs in the subflows&#39;</span><span class="p">)</span>
+
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">[</span><span class="s1">&#39;reservoirs&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;0&#39;</span><span class="p">:</span>
+                <span class="k">print</span> <span class="s1">&#39;overland flow is not routed by extra linear reservoirs&#39;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">ROUTLIB</span><span class="p">[</span><span class="s1">&#39;routover&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">[</span><span class="s1">&#39;reservoirs&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">[</span><span class="s1">&#39;reservoirs&#39;</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;0&#39;</span><span class="p">:</span>
+                <span class="k">print</span> <span class="s1">&#39;baseflow is not routed by extra linear reservoirs&#39;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">ROUTLIB</span><span class="p">[</span><span class="s1">&#39;routbase&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">[</span><span class="s1">&#39;reservoirs&#39;</span><span class="p">][</span><span class="mi">2</span><span class="p">])</span>
+
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">[</span><span class="s1">&#39;interflow&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;intflwnone&#39;</span><span class="p">:</span>
+                <span class="k">print</span> <span class="s1">&#39;no interflow routing, since interflow is not added in the model; second integer in reservoirs option is f no relevance&#39;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">[</span><span class="s1">&#39;reservoirs&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;0&#39;</span><span class="p">:</span>
+                    <span class="k">print</span> <span class="s1">&#39;interflow is not routed by extra linear reservoirs&#39;</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">ROUTLIB</span><span class="p">[</span><span class="s1">&#39;routinter&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">[</span><span class="s1">&#39;reservoirs&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
+
+
+    <span class="k">def</span> <span class="nf">map_STATES</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Translates the STATES LIB towards the array of variables used by the solver</span>
+<span class="sd">        and create the lib of specific variables used in the calculation</span>
+
+<span class="sd">       Returns</span>
+<span class="sd">       --------</span>
+<span class="sd">       self.STATES : dict</span>
+<span class="sd">           dict with model specific states</span>
+<span class="sd">       self.state_str : list</span>
+<span class="sd">           list of strings with variable names (specific order to help mapping in odeint function)</span>
+<span class="sd">       self.state_size : int</span>
+<span class="sd">           number of states in the model</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+<span class="c1">#        if self.OPTIONS[&#39;soilstorage&#39;] == &#39;onelayer&#39;:</span>
+<span class="c1">#            self.state_size=0</span>
+<span class="c1">#            self.state_str=[]</span>
+<span class="c1">#</span>
+<span class="c1">#            self.STATES={}</span>
+<span class="c1">#            #WE FOCUSSEN ONS HIEROP OM HET TE TESTEN!!</span>
+<span class="c1">#            if self.OPTIONS[&#39;uplayer&#39;] == &#39;easytest&#39;:</span>
+<span class="c1">#                self.state_str.append(&#39;S&#39;)</span>
+<span class="c1">#                self.STATES[&#39;S&#39;]=0.</span>
+<span class="c1">#                self.state_size+=1</span>
+<span class="c1">#                print self.state_size</span>
+<span class="c1">#                print self.state_str</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">[</span><span class="s1">&#39;soilstorage&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;twolayer&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">state_size</span><span class="o">=</span><span class="mi">0</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">state_str</span><span class="o">=</span><span class="p">[]</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">STATES</span><span class="o">=</span><span class="p">{}</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">[</span><span class="s1">&#39;uplayer&#39;</span><span class="p">]</span><span class="o">==</span> <span class="s1">&#39;onestate_1&#39;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">state_str</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;S1&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">STATES</span><span class="p">[</span><span class="s1">&#39;S1&#39;</span><span class="p">]</span><span class="o">=</span><span class="mf">0.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">state_size</span><span class="o">+=</span><span class="mi">1</span>
+
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">[</span><span class="s1">&#39;uplayer&#39;</span><span class="p">]</span><span class="o">==</span> <span class="s1">&#39;tension1_1&#39;</span> <span class="ow">or</span> \
+            <span class="bp">self</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">[</span><span class="s1">&#39;uplayer&#39;</span><span class="p">]</span><span class="o">==</span> <span class="s1">&#39;surface1_1&#39;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">state_str</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;S1T&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">STATES</span><span class="p">[</span><span class="s1">&#39;S1T&#39;</span><span class="p">]</span><span class="o">=</span><span class="mf">0.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">state_str</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;S1F&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">STATES</span><span class="p">[</span><span class="s1">&#39;S1F&#39;</span><span class="p">]</span><span class="o">=</span><span class="mf">0.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">state_size</span><span class="o">+=</span><span class="mi">2</span>
+
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">[</span><span class="s1">&#39;uplayer&#39;</span><span class="p">]</span><span class="o">==</span> <span class="s1">&#39;tension2_1&#39;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">state_str</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;S1TA&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">STATES</span><span class="p">[</span><span class="s1">&#39;S1TA&#39;</span><span class="p">]</span><span class="o">=</span><span class="mf">0.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">state_str</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;S1TB&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">STATES</span><span class="p">[</span><span class="s1">&#39;S1TB&#39;</span><span class="p">]</span><span class="o">=</span><span class="mf">0.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">state_str</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;S1F&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">STATES</span><span class="p">[</span><span class="s1">&#39;S1F&#39;</span><span class="p">]</span><span class="o">=</span><span class="mf">0.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">state_size</span><span class="o">+=</span><span class="mi">3</span>
+
+        <span class="c1">#op basis van identifier t -&gt; all fluxen seven in een dataformaat!!</span>
+        <span class="c1">####################################################################</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">[</span><span class="s1">&#39;lowlayer_baseflow&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;tens2pll_2&#39;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">state_str</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;S2T&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">STATES</span><span class="p">[</span><span class="s1">&#39;S2T&#39;</span><span class="p">]</span><span class="o">=</span><span class="mf">0.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">state_str</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;S2FA&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">STATES</span><span class="p">[</span><span class="s1">&#39;S2FA&#39;</span><span class="p">]</span><span class="o">=</span><span class="mf">0.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">state_str</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;S2FB&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">STATES</span><span class="p">[</span><span class="s1">&#39;S2FB&#39;</span><span class="p">]</span><span class="o">=</span><span class="mf">0.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">state_size</span><span class="o">+=</span><span class="mi">3</span>
+
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">[</span><span class="s1">&#39;lowlayer_baseflow&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;unlimfrc_2&#39;</span> <span class="ow">or</span> \
+            <span class="bp">self</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">[</span><span class="s1">&#39;lowlayer_baseflow&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;unlimpow_2&#39;</span> <span class="ow">or</span> \
+            <span class="bp">self</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">[</span><span class="s1">&#39;lowlayer_baseflow&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;topmdexp_2&#39;</span> <span class="ow">or</span> \
+            <span class="bp">self</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">[</span><span class="s1">&#39;lowlayer_baseflow&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;fixedsiz_2&#39;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">state_str</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;S2&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">STATES</span><span class="p">[</span><span class="s1">&#39;S2&#39;</span><span class="p">]</span><span class="o">=</span><span class="mf">0.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">state_size</span><span class="o">+=</span><span class="mi">1</span>
+
+    <span class="k">def</span> <span class="nf">map_FLUXES</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Translates the STATES LIB towards the array of variables used by odeint</span>
+<span class="sd">        and create the lib of specific variables used in the calculation</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ---------</span>
+
+<span class="sd">        self.FLUXES: dict</span>
+<span class="sd">            dict with model specific states</span>
+<span class="sd">        self.flux_str : str</span>
+<span class="sd">            list of strings with variable names (specific order to help mapping in odeint function)</span>
+<span class="sd">        self.flux_size : int</span>
+<span class="sd">            number of states in the model</span>
+
+<span class="sd">        !also pet (potential evaporation )is used as flux to get a total output of all info</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="c1">#rain and pet are present in every model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">flux_str</span><span class="o">=</span><span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">flux_str</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;rain&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">flux_str</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;pet&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">flux_size</span><span class="o">=</span><span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">flux_size</span><span class="o">+=</span><span class="mi">2</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="o">=</span><span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;rain&#39;</span><span class="p">]</span><span class="o">=</span><span class="mf">0.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;pet&#39;</span><span class="p">]</span><span class="o">=</span><span class="mf">0.</span>
+
+
+        <span class="c1">#ONELAYER</span>
+<span class="c1">#        if self.OPTIONS[&#39;soilstorage&#39;] == &#39;onelayer&#39;:</span>
+<span class="c1">#</span>
+<span class="c1">#            #WE FOCUSSEN ONS HIEROP OM HET SYSTEEM TE TESTEN!!</span>
+<span class="c1">#            if self.OPTIONS[&#39;uplayer&#39;] == &#39;easytest&#39;:</span>
+<span class="c1">#                self.flux_str.append(&#39;e&#39;)</span>
+<span class="c1">#                self.FLUXES[&#39;e&#39;]=0.</span>
+<span class="c1">#                self.flux_str.append(&#39;qsx&#39;)</span>
+<span class="c1">#                self.FLUXES[&#39;qsx&#39;]=0.</span>
+<span class="c1">#                self.flux_size+=2</span>
+
+        <span class="c1">#TWOLAYER</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">[</span><span class="s1">&#39;soilstorage&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;twolayer&#39;</span><span class="p">:</span>
+
+            <span class="c1">#uplayer</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">[</span><span class="s1">&#39;uplayer&#39;</span><span class="p">]</span><span class="o">==</span> <span class="s1">&#39;onestate_1&#39;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">flux_str</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;e1&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;e1&#39;</span><span class="p">]</span><span class="o">=</span><span class="mf">0.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">flux_str</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;qufof&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;qufof&#39;</span><span class="p">]</span><span class="o">=</span><span class="mf">0.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">flux_str</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;q12&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;q12&#39;</span><span class="p">]</span><span class="o">=</span><span class="mf">0.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">flux_str</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;qif&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;qif&#39;</span><span class="p">]</span><span class="o">=</span><span class="mf">0.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">flux_str</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;qsx&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;qsx&#39;</span><span class="p">]</span><span class="o">=</span><span class="mf">0.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">flux_size</span><span class="o">+=</span><span class="mi">5</span>
+
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">[</span><span class="s1">&#39;uplayer&#39;</span><span class="p">]</span><span class="o">==</span> <span class="s1">&#39;surface1_1&#39;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">flux_str</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;e1A&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;e1A&#39;</span><span class="p">]</span><span class="o">=</span><span class="mf">0.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">flux_str</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;e1B&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;e1B&#39;</span><span class="p">]</span><span class="o">=</span><span class="mf">0.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">flux_str</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;e1&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;e1&#39;</span><span class="p">]</span><span class="o">=</span><span class="mf">0.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">flux_str</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;qstof&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;qstof&#39;</span><span class="p">]</span><span class="o">=</span><span class="mf">0.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">flux_str</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;q12&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;q12&#39;</span><span class="p">]</span><span class="o">=</span><span class="mf">0.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">flux_str</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;qif&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;qif&#39;</span><span class="p">]</span><span class="o">=</span><span class="mf">0.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">flux_str</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;qsx&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;qsx&#39;</span><span class="p">]</span><span class="o">=</span><span class="mf">0.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">flux_size</span><span class="o">+=</span><span class="mi">7</span>
+
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">[</span><span class="s1">&#39;uplayer&#39;</span><span class="p">]</span><span class="o">==</span> <span class="s1">&#39;tension1_1&#39;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">flux_str</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;e1&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;e1&#39;</span><span class="p">]</span><span class="o">=</span><span class="mf">0.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">flux_str</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;qutof&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;qutof&#39;</span><span class="p">]</span><span class="o">=</span><span class="mf">0.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">flux_str</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;qufof&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;qufof&#39;</span><span class="p">]</span><span class="o">=</span><span class="mf">0.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">flux_str</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;q12&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;q12&#39;</span><span class="p">]</span><span class="o">=</span><span class="mf">0.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">flux_str</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;qif&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;qif&#39;</span><span class="p">]</span><span class="o">=</span><span class="mf">0.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">flux_str</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;qsx&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;qsx&#39;</span><span class="p">]</span><span class="o">=</span><span class="mf">0.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">flux_size</span><span class="o">+=</span><span class="mi">6</span>
+
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">[</span><span class="s1">&#39;uplayer&#39;</span><span class="p">]</span><span class="o">==</span> <span class="s1">&#39;tension2_1&#39;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">flux_str</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;e1A&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;e1A&#39;</span><span class="p">]</span><span class="o">=</span><span class="mf">0.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">flux_str</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;e1B&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;e1B&#39;</span><span class="p">]</span><span class="o">=</span><span class="mf">0.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">flux_str</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;e1&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;e1&#39;</span><span class="p">]</span><span class="o">=</span><span class="mf">0.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">flux_str</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;qurof&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;qurof&#39;</span><span class="p">]</span><span class="o">=</span><span class="mf">0.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">flux_str</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;qutof&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;qutof&#39;</span><span class="p">]</span><span class="o">=</span><span class="mf">0.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">flux_str</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;qufof&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;qufof&#39;</span><span class="p">]</span><span class="o">=</span><span class="mf">0.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">flux_str</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;q12&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;q12&#39;</span><span class="p">]</span><span class="o">=</span><span class="mf">0.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">flux_str</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;qif&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;qif&#39;</span><span class="p">]</span><span class="o">=</span><span class="mf">0.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">flux_str</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;qsx&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;qsx&#39;</span><span class="p">]</span><span class="o">=</span><span class="mf">0.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">flux_size</span><span class="o">+=</span><span class="mi">9</span>
+
+            <span class="c1">#LOWLAYER</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">[</span><span class="s1">&#39;lowlayer_baseflow&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;tens2pll_2&#39;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">flux_str</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;e2&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;e2&#39;</span><span class="p">]</span><span class="o">=</span><span class="mf">0.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">flux_str</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;qbA&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;qbA&#39;</span><span class="p">]</span><span class="o">=</span><span class="mf">0.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">flux_str</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;qbB&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;qbB&#39;</span><span class="p">]</span><span class="o">=</span><span class="mf">0.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">flux_str</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;qb&#39;</span><span class="p">)</span> <span class="c1">#sum of qba and qbb</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;qb&#39;</span><span class="p">]</span><span class="o">=</span><span class="mf">0.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">flux_str</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;qstof&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;qstof&#39;</span><span class="p">]</span><span class="o">=</span><span class="mf">0.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">flux_str</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;qsfofA&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;qsfofA&#39;</span><span class="p">]</span><span class="o">=</span><span class="mf">0.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">flux_str</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;qsfofB&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;qsfofB&#39;</span><span class="p">]</span><span class="o">=</span><span class="mf">0.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">flux_str</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;qsfof&#39;</span><span class="p">)</span> <span class="c1">#sum of qsfofa and qsfofB</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;qsfof&#39;</span><span class="p">]</span><span class="o">=</span><span class="mf">0.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">flux_size</span><span class="o">+=</span><span class="mi">8</span>
+
+
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">[</span><span class="s1">&#39;lowlayer_baseflow&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;unlimfrc_2&#39;</span> <span class="ow">or</span> \
+            <span class="bp">self</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">[</span><span class="s1">&#39;lowlayer_baseflow&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;unlimpow_2&#39;</span> <span class="ow">or</span> \
+            <span class="bp">self</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">[</span><span class="s1">&#39;lowlayer_baseflow&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;topmdexp_2&#39;</span> <span class="ow">or</span> \
+            <span class="bp">self</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">[</span><span class="s1">&#39;lowlayer_baseflow&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;fixedsiz_2&#39;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">flux_str</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;e2&#39;</span><span class="p">)</span>  <span class="c1">#zero in certain options</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;e2&#39;</span><span class="p">]</span><span class="o">=</span><span class="mf">0.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">flux_str</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;qsfof&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;qsfof&#39;</span><span class="p">]</span><span class="o">=</span><span class="mf">0.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">flux_str</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;qb&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;qb&#39;</span><span class="p">]</span><span class="o">=</span><span class="mf">0.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">flux_size</span><span class="o">+=</span><span class="mi">3</span>
+
+        <span class="c1">#the extra routing components</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">[</span><span class="s1">&#39;routing&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;rout_ind&#39;</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ROUTLIB</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+<span class="c1">#                print key,value,&#39;routinginfo&#39;</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">flux_str</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="c1">#array with number of fluxes the number of basins</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">flux_size</span><span class="o">+=</span><span class="mi">1</span>
+<span class="c1">#            print self.FLUXES</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">[</span><span class="s1">&#39;routing&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;rout_all1&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">flux_str</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;qgamma&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;qgamma&#39;</span><span class="p">]</span><span class="o">=</span><span class="mf">0.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">flux_str</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;qfuture&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;qfuture&#39;</span><span class="p">]</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">PARS</span><span class="p">[</span><span class="s1">&#39;frac_future&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>   <span class="c1">#ARRAY!!</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">flux_size</span><span class="o">+=</span><span class="mi">2</span>
+
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">flux_str</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;q_all&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;q_all&#39;</span><span class="p">]</span><span class="o">=</span><span class="mf">0.</span>  <span class="c1">#sum of qsx,qb and qif coming out of storage model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">flux_str</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;e_all&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;e_all&#39;</span><span class="p">]</span><span class="o">=</span><span class="mf">0.</span>  <span class="c1">#sum of e1 and e2 coming out of storage model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">flux_size</span><span class="o">+=</span><span class="mi">2</span>
+
+
+    <span class="k">def</span> <span class="nf">state_lib_update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">cal_states</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Update the states in the dictionary</span>
+
+<span class="sd">        Var-names in string (fixed places comparable with vars in odeint) used to map towards dictionary</span>
+<span class="sd">        + calculate derived states</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="c1">##  GET VALUES FROM ODEINT AND PUT IN LIBRARY</span>
+        <span class="n">cnt</span><span class="o">=</span><span class="mi">0</span>
+        <span class="k">for</span> <span class="n">st</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">state_str</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">STATES</span><span class="p">[</span><span class="n">st</span><span class="p">]</span><span class="o">=</span><span class="n">cal_states</span><span class="p">[</span><span class="n">cnt</span><span class="p">]</span>
+<span class="c1">#            print cal_states[cnt]</span>
+            <span class="n">cnt</span><span class="o">+=</span><span class="mi">1</span>
+
+
+        <span class="c1">## Calculate derived STATES, needed to correspond to the flux calculations</span>
+        <span class="c1"># this makes the STATE-lib larger, but the state_str remaines and is the most important for the administration</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">[</span><span class="s1">&#39;soilstorage&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;twolayer&#39;</span><span class="p">:</span>
+            <span class="c1">#UPLAYER</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">[</span><span class="s1">&#39;uplayer&#39;</span><span class="p">]</span><span class="o">==</span> <span class="s1">&#39;onestate_1&#39;</span><span class="p">:</span>
+                <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">                FSTATE%TENS_1  = MIN(FSTATE%WATR_1, DPARAM%MAXTENS_1)      ! tension storage</span>
+<span class="sd">                FSTATE%FREE_1  = MAX(XMIN, FSTATE%WATR_1 - DPARAM%MAXTENS_1) ! free storage</span>
+<span class="sd">                &#39;&#39;&#39;</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">STATES</span><span class="p">[</span><span class="s1">&#39;S1T&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">STATES</span><span class="p">[</span><span class="s1">&#39;S1&#39;</span><span class="p">],</span><span class="bp">self</span><span class="o">.</span><span class="n">PARS</span><span class="p">[</span><span class="s1">&#39;S1Tmax&#39;</span><span class="p">])</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">STATES</span><span class="p">[</span><span class="s1">&#39;S1F&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xmini</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">STATES</span><span class="p">[</span><span class="s1">&#39;S1&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">PARS</span><span class="p">[</span><span class="s1">&#39;S1Tmax&#39;</span><span class="p">])</span>
+
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">[</span><span class="s1">&#39;uplayer&#39;</span><span class="p">]</span><span class="o">==</span> <span class="s1">&#39;surface1_1&#39;</span><span class="p">:</span>
+                <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">                NAM implementation of the upper layer</span>
+
+<span class="sd">                &#39;&#39;&#39;</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">STATES</span><span class="p">[</span><span class="s1">&#39;S1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">STATES</span><span class="p">[</span><span class="s1">&#39;S1T&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">STATES</span><span class="p">[</span><span class="s1">&#39;S1F&#39;</span><span class="p">]</span>
+
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">[</span><span class="s1">&#39;uplayer&#39;</span><span class="p">]</span><span class="o">==</span> <span class="s1">&#39;tension1_1&#39;</span><span class="p">:</span>
+                <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">                FSTATE%WATR_1  = FSTATE%TENS_1 + FSTATE%FREE_1             ! total storage</span>
+<span class="sd">                &#39;&#39;&#39;</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">STATES</span><span class="p">[</span><span class="s1">&#39;S1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">STATES</span><span class="p">[</span><span class="s1">&#39;S1T&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">STATES</span><span class="p">[</span><span class="s1">&#39;S1F&#39;</span><span class="p">]</span>
+
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">[</span><span class="s1">&#39;uplayer&#39;</span><span class="p">]</span><span class="o">==</span> <span class="s1">&#39;tension2_1&#39;</span><span class="p">:</span>
+                <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">                 FSTATE%TENS_1  = FSTATE%TENS_1A + FSTATE%TENS_1B           ! tension storage</span>
+<span class="sd">                 FSTATE%WATR_1  = FSTATE%TENS_1  + FSTATE%FREE_1            ! total storage</span>
+<span class="sd">                &#39;&#39;&#39;</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">STATES</span><span class="p">[</span><span class="s1">&#39;S1T&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">STATES</span><span class="p">[</span><span class="s1">&#39;S1TA&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">STATES</span><span class="p">[</span><span class="s1">&#39;S1TB&#39;</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">STATES</span><span class="p">[</span><span class="s1">&#39;S1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">STATES</span><span class="p">[</span><span class="s1">&#39;S1T&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">STATES</span><span class="p">[</span><span class="s1">&#39;S1F&#39;</span><span class="p">]</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;wrong option for upper layer&#39;</span><span class="p">)</span>
+
+            <span class="c1">#LOWLAYER</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">[</span><span class="s1">&#39;lowlayer_baseflow&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;tens2pll_2&#39;</span><span class="p">:</span>
+                <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">                FSTATE%FREE_2  = FSTATE%FREE_2A + FSTATE%FREE_2B              ! free storage</span>
+<span class="sd">                FSTATE%WATR_2  = FSTATE%TENS_2  + FSTATE%FREE_2               ! total storage</span>
+<span class="sd">                &#39;&#39;&#39;</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">STATES</span><span class="p">[</span><span class="s1">&#39;S2F&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">STATES</span><span class="p">[</span><span class="s1">&#39;S2FA&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">STATES</span><span class="p">[</span><span class="s1">&#39;S2FB&#39;</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">STATES</span><span class="p">[</span><span class="s1">&#39;S2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">STATES</span><span class="p">[</span><span class="s1">&#39;S2T&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">STATES</span><span class="p">[</span><span class="s1">&#39;S2F&#39;</span><span class="p">]</span>
+
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">[</span><span class="s1">&#39;lowlayer_baseflow&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;unlimfrc_2&#39;</span> <span class="ow">or</span> \
+            <span class="bp">self</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">[</span><span class="s1">&#39;lowlayer_baseflow&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;unlimpow_2&#39;</span> <span class="ow">or</span> \
+            <span class="bp">self</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">[</span><span class="s1">&#39;lowlayer_baseflow&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;topmdexp_2&#39;</span> <span class="ow">or</span> \
+            <span class="bp">self</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">[</span><span class="s1">&#39;lowlayer_baseflow&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;fixedsiz_2&#39;</span><span class="p">:</span>
+                <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">                FSTATE%TENS_2  = MIN(FSTATE%WATR_2, DPARAM%MAXTENS_2)         ! tension storage</span>
+<span class="sd">                FSTATE%FREE_2  = MAX(0._sp, FSTATE%WATR_2 - DPARAM%MAXTENS_2) ! free storage</span>
+<span class="sd">                &#39;&#39;&#39;</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">STATES</span><span class="p">[</span><span class="s1">&#39;S2T&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">STATES</span><span class="p">[</span><span class="s1">&#39;S2&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">PARS</span><span class="p">[</span><span class="s1">&#39;S2Tmax&#39;</span><span class="p">])</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">STATES</span><span class="p">[</span><span class="s1">&#39;S2F&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">STATES</span><span class="p">[</span><span class="s1">&#39;S2&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">PARS</span><span class="p">[</span><span class="s1">&#39;S2Tmax&#39;</span><span class="p">])</span>
+
+
+    <span class="k">def</span> <span class="nf">calc_fluxes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Calculate fluxes, based on the current state values,</span>
+<span class="sd">        follow up of the different flux calculations is important</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">[</span><span class="s1">&#39;soilstorage&#39;</span><span class="p">]</span><span class="o">==</span><span class="s1">&#39;twolayer&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Evaporation</span><span class="o">.</span><span class="n">calc</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">STATES</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Surface</span><span class="o">.</span><span class="n">calc</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">STATES</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">)</span> <span class="c1">#MOET VOOR BASEFLOW EN PERCOLATION GEBEUREN!!!!</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Percolation</span><span class="o">.</span><span class="n">calc</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">STATES</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Interflow</span><span class="o">.</span><span class="n">calc</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">STATES</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Baseflow</span><span class="o">.</span><span class="n">calc</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">STATES</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Misscell</span><span class="o">.</span><span class="n">calc</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">STATES</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Routing</span><span class="o">.</span><span class="n">calc</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">STATES</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">ROUTLIB</span><span class="p">)</span>  <span class="c1">#moet laatst</span>
+
+
+
+    <span class="k">def</span> <span class="nf">deriv_mod</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">cal_states</span><span class="p">,</span><span class="n">t</span><span class="p">,</span><span class="n">raint</span><span class="p">,</span><span class="n">evapo</span><span class="p">,</span><span class="n">PARS</span><span class="p">,</span><span class="n">OPTIONS</span><span class="p">):</span>  <span class="c1">#odeint</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Calculate derivatives</span>
+<span class="sd">        gets libraries: STATES,PARS and OPTIONS</span>
+<span class="sd">        gets input-timeseries taint,evapo</span>
+
+<span class="sd">        TODO: control if fluxes to large or too small -&gt; repair</span>
+
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="c1">##--------------------------------------------------------------------</span>
+        <span class="c1">#NEW IDEA!: also an update fluxes - combined with options and based on the mapped fluxes</span>
+        <span class="c1"># -&gt; give all STATES and calculate the fluxes (dict), based on OPTIONS and the fluxes in it</span>
+        <span class="c1"># run evaporation</span>
+        <span class="c1"># run ...</span>
+        <span class="c1">#dan ook routing analytisch in 1 zwoeng te doen! en geen trucskes met updaten en zo</span>
+        <span class="c1">##--------------------------------------------------------------------</span>
+
+        <span class="c1">##--------------------------------------------------------------------</span>
+        <span class="c1">#update rain and et</span>
+        <span class="n">rains</span><span class="o">=</span><span class="n">raint</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>  <span class="c1">#needs to be interp1d object</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;rain&#39;</span><span class="p">]</span><span class="o">=</span><span class="n">rains</span>
+        <span class="n">pet</span><span class="o">=</span><span class="n">evapo</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>    <span class="c1">#needs to be interp1d object</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;pet&#39;</span><span class="p">]</span><span class="o">=</span><span class="n">pet</span> <span class="c1">#!!! ZP vooraleer de ander fluxen te gebeuren!!</span>
+        <span class="c1">##--------------------------------------------------------------------</span>
+
+
+        <span class="n">savetimefreq</span><span class="o">=</span><span class="mf">500.</span>
+        <span class="k">if</span> <span class="n">t</span> <span class="o">&gt;</span> <span class="n">savetimefreq</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">timecounter</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">timecounter</span><span class="o">+=</span><span class="mi">1</span>
+            <span class="k">print</span> <span class="s1">&#39;Time step &#39;</span><span class="p">,</span><span class="nb">str</span><span class="p">(</span><span class="n">savetimefreq</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">timecounter</span><span class="p">),</span><span class="s1">&#39; calculated...&#39;</span>
+            <span class="k">print</span> <span class="s1">&#39;    &#39;</span>
+
+        <span class="c1">##--------------------------------------------------------------------</span>
+        <span class="c1">#update library of STATES with current values to calculate the fluxes</span>
+        <span class="c1">#the derived STATES are already calculated</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">state_lib_update</span><span class="p">(</span><span class="n">cal_states</span><span class="p">)</span>
+        <span class="c1">##--------------------------------------------------------------------</span>
+
+        <span class="c1">##--------------------------------------------------------------------</span>
+        <span class="c1">#update library of FLUXES with current values to calculate the NEW STATES</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">calc_fluxes</span><span class="p">()</span>
+        <span class="c1">##--------------------------------------------------------------------</span>
+
+        <span class="c1">##--------------------------------------------------------------------</span>
+        <span class="c1">## Seperate library to map later on with real library</span>
+        <span class="n">state_deriv</span><span class="o">=</span><span class="p">{}</span>
+        <span class="c1">##</span>
+        <span class="n">dStates</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">state_size</span><span class="p">)</span>
+        <span class="c1">##--------------------------------------------------------------------</span>
+
+        <span class="k">if</span> <span class="n">OPTIONS</span><span class="p">[</span><span class="s1">&#39;soilstorage&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;onelayer&#39;</span><span class="p">:</span>
+<span class="c1">#            if OPTIONS[&#39;uplayer&#39;] == &#39;VHMstyle&#39;:</span>
+<span class="c1">#                S = (self.rain_int - qsx) - self.Evaporation.calc(self.STATES,pet,lay=&#39;up&#39;) -qif -qufof #hier qufof nodig? TE VERANDEREN</span>
+<span class="c1">#            if OPTIONS[&#39;uplayer&#39;] == &#39;logSPM&#39;:</span>
+<span class="c1">#                S = self.rain_int - q_quick - q_rge - q_et</span>
+
+
+            <span class="c1">#WE FOCUSSEN ONS HIEROP OM HET TE TESTEN!!</span>
+            <span class="k">if</span> <span class="n">OPTIONS</span><span class="p">[</span><span class="s1">&#39;uplayer&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;easytest&#39;</span><span class="p">:</span>
+<span class="c1">#                S = rains - self.Evaporation.calc(self.STATES,pet) - self.Surface.testeasy(self.STATES)</span>
+                <span class="n">dS</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;rain&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;e&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;qsx&#39;</span><span class="p">]</span>
+                <span class="n">state_deriv</span><span class="p">[</span><span class="s1">&#39;dS&#39;</span><span class="p">]</span><span class="o">=</span><span class="n">dS</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;Not yet implemented&#39;</span><span class="p">)</span>
+
+
+        <span class="k">elif</span> <span class="n">OPTIONS</span><span class="p">[</span><span class="s1">&#39;soilstorage&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;twolayer&#39;</span><span class="p">:</span>  <span class="c1">#! voor ET: gebruik lay=&#39;up&#39; and lay=&#39;low&#39;</span>
+            <span class="c1">#UPLAYER</span>
+            <span class="k">if</span> <span class="n">OPTIONS</span><span class="p">[</span><span class="s1">&#39;uplayer&#39;</span><span class="p">]</span><span class="o">==</span> <span class="s1">&#39;onestate_1&#39;</span><span class="p">:</span>
+                <span class="n">state_deriv</span><span class="p">[</span><span class="s1">&#39;dS1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;rain&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;qsx&#39;</span><span class="p">])</span> \
+                <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;e1&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;q12&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;qif&#39;</span><span class="p">]</span> \
+                <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;qufof&#39;</span><span class="p">]</span>
+
+            <span class="k">elif</span> <span class="n">OPTIONS</span><span class="p">[</span><span class="s1">&#39;uplayer&#39;</span><span class="p">]</span><span class="o">==</span> <span class="s1">&#39;surface1_1&#39;</span><span class="p">:</span>
+                <span class="n">state_deriv</span><span class="p">[</span><span class="s1">&#39;dS1F&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;rain&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;qsx&#39;</span><span class="p">])</span> \
+                <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;e1A&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;q12&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;qif&#39;</span><span class="p">]</span> \
+                <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;qstof&#39;</span><span class="p">]</span>
+
+                <span class="n">state_deriv</span><span class="p">[</span><span class="s1">&#39;dS1T&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;qstof&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;e1B&#39;</span><span class="p">]</span>
+
+            <span class="k">elif</span> <span class="n">OPTIONS</span><span class="p">[</span><span class="s1">&#39;uplayer&#39;</span><span class="p">]</span><span class="o">==</span> <span class="s1">&#39;tension1_1&#39;</span><span class="p">:</span>
+                <span class="n">state_deriv</span><span class="p">[</span><span class="s1">&#39;dS1T&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;rain&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;qsx&#39;</span><span class="p">])</span> \
+                <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;e1&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;qutof&#39;</span><span class="p">]</span>
+
+                <span class="n">state_deriv</span><span class="p">[</span><span class="s1">&#39;dS1F&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;qutof&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;q12&#39;</span><span class="p">]</span> \
+                <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;qif&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;qufof&#39;</span><span class="p">]</span>
+
+            <span class="k">elif</span> <span class="n">OPTIONS</span><span class="p">[</span><span class="s1">&#39;uplayer&#39;</span><span class="p">]</span><span class="o">==</span> <span class="s1">&#39;tension2_1&#39;</span><span class="p">:</span>
+                <span class="n">state_deriv</span><span class="p">[</span><span class="s1">&#39;dS1TA&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;rain&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;qsx&#39;</span><span class="p">])</span> \
+                <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;e1A&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;qurof&#39;</span><span class="p">]</span>
+
+                <span class="n">state_deriv</span><span class="p">[</span><span class="s1">&#39;dS1TB&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;qurof&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;e1B&#39;</span><span class="p">]</span>  \
+                <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;qutof&#39;</span><span class="p">]</span>
+
+                <span class="n">state_deriv</span><span class="p">[</span><span class="s1">&#39;dS1F&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;qutof&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;q12&#39;</span><span class="p">]</span> \
+                <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;qif&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;qufof&#39;</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;wrong option for upper layer&#39;</span><span class="p">)</span>
+
+            <span class="c1">#LOWLAYER</span>
+            <span class="k">if</span> <span class="n">OPTIONS</span><span class="p">[</span><span class="s1">&#39;lowlayer_baseflow&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;tens2pll_2&#39;</span><span class="p">:</span>
+                <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">                DY_DT%TENS_2  = M_FLUX%QPERC_12*(1._SP-MPARAM%PERCFRAC) - M_FLUX%EVAP_2 - M_FLUX%TENS2FREE_2</span>
+<span class="sd">                DY_DT%FREE_2A = M_FLUX%QPERC_12*(MPARAM%PERCFRAC/2._SP) + M_FLUX%TENS2FREE_2/2._SP - M_FLUX%QBASE_2A &amp;</span>
+<span class="sd">                  - M_FLUX%OFLOW_2A</span>
+<span class="sd">                DY_DT%FREE_2B = M_FLUX%QPERC_12*(MPARAM%PERCFRAC/2._SP) + M_FLUX%TENS2FREE_2/2._SP - M_FLUX%QBASE_2B &amp;</span>
+<span class="sd">                  - M_FLUX%OFLOW_2B</span>
+<span class="sd">                &#39;&#39;&#39;</span>
+                <span class="n">state_deriv</span><span class="p">[</span><span class="s1">&#39;dS2T&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">PARS</span><span class="p">[</span><span class="s1">&#39;kappa&#39;</span><span class="p">])</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;q12&#39;</span><span class="p">]</span> \
+                <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;e2&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;qstof&#39;</span><span class="p">]</span>
+                <span class="n">state_deriv</span><span class="p">[</span><span class="s1">&#39;dS2FA&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;q12&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">PARS</span><span class="p">[</span><span class="s1">&#39;kappa&#39;</span><span class="p">]</span><span class="o">/</span><span class="mf">2.</span><span class="p">)</span> \
+                <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;qstof&#39;</span><span class="p">]</span><span class="o">/</span><span class="mf">2.</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;qbA&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;qsfofA&#39;</span><span class="p">]</span>
+                <span class="n">state_deriv</span><span class="p">[</span><span class="s1">&#39;dS2FB&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;q12&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">PARS</span><span class="p">[</span><span class="s1">&#39;kappa&#39;</span><span class="p">]</span><span class="o">/</span><span class="mf">2.</span><span class="p">)</span> \
+                <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;qstof&#39;</span><span class="p">]</span><span class="o">/</span><span class="mf">2.</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;qbB&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;qsfofB&#39;</span><span class="p">]</span>
+
+            <span class="k">elif</span> <span class="n">OPTIONS</span><span class="p">[</span><span class="s1">&#39;lowlayer_baseflow&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;unlimfrc_2&#39;</span> <span class="ow">or</span> \
+            <span class="n">OPTIONS</span><span class="p">[</span><span class="s1">&#39;lowlayer_baseflow&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;unlimpow_2&#39;</span> <span class="ow">or</span> \
+            <span class="n">OPTIONS</span><span class="p">[</span><span class="s1">&#39;lowlayer_baseflow&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;topmdexp_2&#39;</span> <span class="ow">or</span> \
+            <span class="n">OPTIONS</span><span class="p">[</span><span class="s1">&#39;lowlayer_baseflow&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;fixedsiz_2&#39;</span><span class="p">:</span>
+<span class="c1">#                if OPTIONS[&#39;uplayer&#39;]== &#39;surface1_1&#39;:</span>
+<span class="c1">#                    state_deriv[&#39;dS2&#39;]  = self.FLUXES[&#39;qstof&#39;] - self.FLUXES[&#39;e2&#39;]</span>
+<span class="c1">#                else:</span>
+                <span class="n">state_deriv</span><span class="p">[</span><span class="s1">&#39;dS2&#39;</span><span class="p">]</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;q12&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;e2&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;qb&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">FLUXES</span><span class="p">[</span><span class="s1">&#39;qsfof&#39;</span><span class="p">]</span>
+
+        <span class="c1">##--------------------------------------------------------------------</span>
+        <span class="c1">## check if state_deriv and state_str are of same size</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">state_deriv</span><span class="p">)</span> <span class="o">&lt;&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">state_str</span><span class="p">):</span>
+            <span class="k">print</span> <span class="s1">&#39;state deriv is&#39;</span>
+            <span class="k">print</span> <span class="n">state_deriv</span>
+            <span class="k">print</span> <span class="s1">&#39;state str is&#39;</span>
+            <span class="k">print</span> <span class="n">state_str</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;Mismatch between calculated derivatives and number of state variables&#39;</span><span class="p">)</span>
+
+        <span class="c1">## Map states with self.state_str and put in right order</span>
+        <span class="n">cnt</span><span class="o">=</span><span class="mi">0</span>
+        <span class="k">for</span> <span class="n">st</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">state_str</span><span class="p">:</span>
+            <span class="n">dst</span><span class="o">=</span><span class="s1">&#39;d&#39;</span><span class="o">+</span><span class="n">st</span>
+            <span class="k">if</span> <span class="n">dst</span> <span class="ow">in</span> <span class="n">state_deriv</span><span class="p">:</span>
+                <span class="n">dStates</span><span class="p">[</span><span class="n">cnt</span><span class="p">]</span> <span class="o">=</span> <span class="n">state_deriv</span><span class="p">[</span><span class="n">dst</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;Mismatch between calculated derivatives and number of state variables&#39;</span><span class="p">)</span>
+            <span class="n">cnt</span><span class="o">+=</span><span class="mi">1</span>
+
+        <span class="c1">##--------------------------------------------------------------------</span>
+        <span class="k">return</span> <span class="n">dStates</span>
+
+
+<div class="viewcode-block" id="pyFUSE.get_all_runids"><a class="viewcode-back" href="../../model.html#pyfuse.pyFUSE.get_all_runids">[docs]</a>    <span class="k">def</span> <span class="nf">get_all_runids</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Get list of all used run_ids saved in the hdf5 file</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ofile</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="pyFUSE.clean_outputs"><a class="viewcode-back" href="../../model.html#pyfuse.pyFUSE.clean_outputs">[docs]</a>    <span class="k">def</span> <span class="nf">clean_outputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">todelete</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Delete the none interesting output groups and the related datasets</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        --------------</span>
+<span class="sd">        todelete: list</span>
+<span class="sd">            list of strings with the groups to delete</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">for</span> <span class="n">ids</span> <span class="ow">in</span> <span class="n">todelete</span><span class="p">:</span>
+            <span class="k">print</span> <span class="n">ids</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">ofile</span><span class="p">[</span><span class="n">ids</span><span class="p">]</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="k">print</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> is not an existing group, so not used as run_id for this model&#39;</span> <span class="o">%</span><span class="n">ids</span></div>
+
+    <span class="k">def</span> <span class="nf">update_pars</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">dic2update</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Takes existing library and only updates the chosen parameters from</span>
+<span class="sd">        the given dictionary</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">dic2update</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">PARS</span><span class="p">:</span>
+                <span class="k">print</span> <span class="s1">&#39;Par value of parameter &#39;</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span><span class="s1">&#39; changed: old value was &#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">PARS</span><span class="p">[</span><span class="n">key</span><span class="p">],</span><span class="s1">&#39;, the new value is &#39;</span><span class="p">,</span><span class="n">value</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">PARS</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">print</span> <span class="s1">&#39;Parameter &#39;</span><span class="p">,</span><span class="n">key</span><span class="p">,</span><span class="s1">&#39; not updated, since not in current dictionary&#39;</span>
+
+<div class="viewcode-block" id="pyFUSE.load_new_pars"><a class="viewcode-back" href="../../model.html#pyfuse.pyFUSE.load_new_pars">[docs]</a>    <span class="k">def</span> <span class="nf">load_new_pars</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">inff</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Load a parameter set from a input parameter file or dict and put in parameter</span>
+<span class="sd">        dictionary or load them from the pars given in dict</span>
+
+<span class="sd">        Currently only from file is supported, directly passing a dictionary should also be possible and will be implemented</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        -------------</span>
+<span class="sd">        inff: str</span>
+<span class="sd">            name of the input parameter file</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inff</span><span class="p">,</span><span class="nb">str</span><span class="p">):</span>
+            <span class="n">pp</span><span class="o">=</span><span class="n">Set_pars</span><span class="p">(</span><span class="n">inff</span><span class="p">)</span>
+            <span class="n">ppr</span><span class="o">=</span><span class="n">Set_pars_for_run</span><span class="p">(</span><span class="n">pp</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ppr</span><span class="p">,</span><span class="nb">dict</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">PARS</span><span class="o">=</span><span class="n">pprn</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inff</span><span class="p">,</span><span class="nb">dict</span><span class="p">):</span>
+            <span class="c1">#assumes ready for run</span>
+            <span class="c1">#pars updated</span>
+<span class="c1">#            self.PARS = inff  #old implementation: entire pardict</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">update_pars</span><span class="p">(</span><span class="n">inff</span><span class="p">)</span> <span class="c1">#new, only relevant</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">PARS</span> <span class="o">=</span> <span class="n">Derived_pars</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">PARS</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">get_list_ode_integrators</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">odespy</span><span class="o">.</span><span class="n">solvers</span><span class="o">.</span><span class="n">list_available_solvers</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">set_solver</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">solver</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;select solver to numerically solve the model</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">odespy_import</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">solver</span> <span class="ow">in</span> <span class="n">odespy</span><span class="o">.</span><span class="n">solvers</span><span class="o">.</span><span class="n">list_available_solvers</span><span class="p">():</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+                    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">                    Selected solver not available, see an</span>
+<span class="sd">                    overview of available solvers with the</span>
+<span class="sd">                    get_list_ode_integrators function</span>
+<span class="sd">                    &quot;&quot;&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">ode_integrator</span> <span class="o">=</span> <span class="n">solver</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_use_odespy</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">print</span> <span class="s1">&#39;odespy not available, using scipy.odeint implementation&#39;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ode_integrator</span> <span class="o">=</span> <span class="s1">&#39;odeint&#39;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_use_odespy</span> <span class="o">=</span> <span class="bp">False</span>
+
+<div class="viewcode-block" id="pyFUSE.run"><a class="viewcode-back" href="../../model.html#pyfuse.pyFUSE.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">custom_period</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">new_pars</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span><span class="n">run_id</span><span class="o">=</span><span class="s1">&#39;testrun&#39;</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Run the model!</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ------------</span>
+<span class="sd">        custom_period:</span>
+<span class="sd">            calculate the model for a specific subperiod of the total data lenght</span>
+<span class="sd">        new_pars: str</span>
+<span class="sd">            textfile of the new parameters used to (re)run the model or</span>
+<span class="sd">            a dictionary</span>
+<span class="sd">        run_id: str</span>
+<span class="sd">            used to identify the outputs of the specific modelrun,</span>
+<span class="sd">            if nothing given, a testrun-group is added</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">if</span> <span class="n">new_pars</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">load_new_pars</span><span class="p">(</span><span class="n">new_pars</span><span class="p">)</span>
+            <span class="c1">#check if run_id is is renewed</span>
+            <span class="k">if</span> <span class="n">run_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ofile</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;Give new run id when parameter values are changed&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">print</span> <span class="s1">&#39;New parameterization saved under the run_id&#39;</span><span class="p">,</span><span class="n">run_id</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">print</span> <span class="s1">&#39;Model simulation with given set of parameters&#39;</span>
+
+
+        <span class="c1">#GET METHODS FOR FLUXES -&gt; create instance with the model specific inputs</span>
+        <span class="c1">##################################</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Evaporation</span> <span class="o">=</span> <span class="n">Evaporation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">PARS</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Surface</span> <span class="o">=</span> <span class="n">Surface</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">PARS</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Percolation</span> <span class="o">=</span> <span class="n">Percolation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">PARS</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Interflow</span> <span class="o">=</span> <span class="n">Interflow</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">PARS</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Baseflow</span> <span class="o">=</span> <span class="n">Baseflow</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">PARS</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Routing</span> <span class="o">=</span> <span class="n">Routing</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">PARS</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Misscell</span> <span class="o">=</span> <span class="n">Misscell</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">PARS</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">)</span>
+        <span class="k">print</span> <span class="s1">&#39; &#39;</span>
+        <span class="k">print</span> <span class="s1">&#39;Model fluxes are loaded&#39;</span>
+        <span class="k">print</span> <span class="s1">&#39; &#39;</span>
+
+        <span class="c1">#----------------------------------------------------------------------</span>
+        <span class="c1"># CHECK CALCULATION TIME</span>
+        <span class="c1">#----------------------------------------------------------------------</span>
+        <span class="n">e0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="c1"># elapsed time since the epoch</span>
+        <span class="n">c0</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">clock</span><span class="p">()</span> <span class="c1"># total CPU time spent in the script so far</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">timecounter</span><span class="o">=</span><span class="mf">1.</span>
+        <span class="c1">#----------------------------------------------------------------------</span>
+
+        <span class="c1">#----------------------------------------------------------------------</span>
+        <span class="c1">#Create the state and flux arrays to save</span>
+        <span class="c1">#----------------------------------------------------------------------</span>
+<span class="c1">#        self.ofile.create_group(run_id)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">custom_period</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">create_datasets</span><span class="p">(</span><span class="n">run_id</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;this functionality is not yet implemented in the model&#39;</span><span class="p">)</span>
+        <span class="c1">#----------------------------------------------------------------------</span>
+
+        <span class="c1">#----------------------------------------------------------------------</span>
+        <span class="c1">#initiate timestep-counter</span>
+        <span class="c1">#self.current_timestep=1</span>
+        <span class="c1">#----------------------------------------------------------------------</span>
+
+        <span class="c1">#----------------------------------------------------------------------</span>
+        <span class="c1">#Prepare initial conditions AND MAKE RELEVANT FOR  OPTIONS ==&gt; MAPPERFUNCIONS</span>
+        <span class="c1">#TODO: make it INITFRAC from max values</span>
+        <span class="c1">##################################</span>
+        <span class="c1">#prepare initial values of different variables based on number of variables</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">INIT</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">state_size</span><span class="p">)</span><span class="o">*</span><span class="mf">1.</span>
+        <span class="c1">#specially for NAM test:</span>
+        <span class="c1">#tmself.INIT=[100., 0.5, 0.0]</span>
+        <span class="c1">#specially for PDM test:</span>
+        <span class="c1">#self.INIT=[20., 0.5, 0.0]</span>
+        <span class="k">print</span> <span class="s1">&#39;Initial values are loaded&#39;</span>
+        <span class="k">print</span> <span class="s1">&#39; &#39;</span>
+
+        <span class="c1">#----------------------------------------------------------------------</span>
+
+        <span class="c1">#----------------------------------------------------------------------</span>
+        <span class="c1">#Solve with LSODA scheme -&gt; odeint</span>
+        <span class="c1"># more freedom in the solver method needed, but for the first version, odeint is ok</span>
+        <span class="c1"># http://hplgit.github.io/odespy/doc/api/odespy.html</span>
+        <span class="c1">#----------------------------------------------------------------------</span>
+        <span class="k">print</span> <span class="s1">&#39;Model simulation started...&#39;</span>
+        <span class="k">print</span> <span class="s1">&#39; &#39;</span>
+
+        <span class="c1"># solvers</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_use_odespy</span> <span class="ow">and</span> <span class="n">odespy_import</span><span class="p">:</span>
+            <span class="n">solver</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="s2">&quot;odespy.&quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">ode_integrator</span> <span class="o">+</span> <span class="s2">&quot;(self.deriv_mod)&quot;</span><span class="p">)</span>
+            <span class="n">solver</span><span class="o">.</span><span class="n">set_initial_condition</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">INIT</span><span class="p">)</span>
+            <span class="n">solver</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">f_args</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rain_int</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">evapo_int</span><span class="p">,</span>
+                                 <span class="bp">self</span><span class="o">.</span><span class="n">PARS</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">,))</span>
+            <span class="n">state_out</span><span class="p">,</span> <span class="n">t</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time</span><span class="p">)</span>
+            <span class="n">infodict</span> <span class="o">=</span> <span class="s1">&#39;odespy does not support convergence infodict&#39;</span>
+
+            <span class="k">print</span> <span class="s1">&#39;Using &#39;</span> <span class="o">+</span> <span class="n">solver</span><span class="o">.</span><span class="n">quick_description</span> <span class="o">+</span> <span class="s1">&#39;solver&#39;</span>
+
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">ode_integrator</span> <span class="o">==</span> <span class="s1">&#39;odeint&#39;</span><span class="p">:</span>
+            <span class="n">state_out</span><span class="p">,</span> <span class="n">infodict</span> <span class="o">=</span> <span class="n">odeint</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">deriv_mod</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">INIT</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">time</span><span class="p">,</span>
+                                        <span class="n">full_output</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">printmessg</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                                        <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rain_int</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">evapo_int</span><span class="p">,</span>
+                                              <span class="bp">self</span><span class="o">.</span><span class="n">PARS</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">),</span> <span class="n">hmax</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;Current solver setting not functional!&#39;</span><span class="p">)</span>
+
+     <span class="c1"># ODESPY stijl: solver = eval(&quot;odespy.&quot; + self.ode_integrator + &quot;(self._fun_ODE)&quot;)</span>
+     <span class="c1"># https://github.ugent.be/biomath/biointense/blob/master/biointense/ode_generator.py  lijn 1057</span>
+        <span class="c1"># todo -&gt; user solver.get() + change options!</span>
+
+        <span class="k">print</span> <span class="s1">&#39;...Model simulation ends&#39;</span>
+        <span class="k">print</span> <span class="s1">&#39; &#39;</span>
+
+        <span class="c1">#print infodict</span>
+        <span class="c1">#----------------------------------------------------------------------</span>
+
+        <span class="c1">#----------------------------------------------------------------------</span>
+        <span class="c1">#SAVE STATES TO hdf5 folder</span>
+        <span class="c1">#----------------------------------------------------------------------</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">statetoh5</span><span class="p">(</span><span class="n">run_id</span><span class="p">,</span><span class="n">state_out</span><span class="p">)</span>
+        <span class="c1">#----------------------------------------------------------------------</span>
+        <span class="k">print</span> <span class="s1">&#39;State results saved...&#39;</span>
+        <span class="k">print</span> <span class="s1">&#39; &#39;</span>
+        <span class="c1">#----------------------------------------------------------------------</span>
+        <span class="c1">#CALCULATE FLUXES for specific timesteps and save to hdf5 folder</span>
+        <span class="c1">#----------------------------------------------------------------------</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fluxtoh5</span><span class="p">(</span><span class="n">run_id</span><span class="p">,</span><span class="n">state_out</span><span class="p">)</span>
+        <span class="k">print</span> <span class="s1">&#39;Fluxes calculated and saved...&#39;</span>
+        <span class="k">print</span> <span class="s1">&#39; &#39;</span>
+        <span class="c1">#alternatief: alles saven en op basis geg van de infodict de fluxen per tijdstap berekenen</span>
+        <span class="c1">#----------------------------------------------------------------------</span>
+
+        <span class="c1">#----------------------------------------------------------------------</span>
+        <span class="c1">#PUT PARS IN hdf5 file</span>
+        <span class="c1">#----------------------------------------------------------------------</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">partoh5</span><span class="p">(</span><span class="n">run_id</span><span class="p">)</span>
+        <span class="c1">#Add constant values as attribute</span>
+        <span class="k">for</span> <span class="n">cnt</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">CONST</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rungroup</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="n">cnt</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CONST</span><span class="p">[</span><span class="n">cnt</span><span class="p">]</span>
+        <span class="c1">#----------------------------------------------------------------------</span>
+
+        <span class="c1">#TODO:  opleten voor de trunc ations en andere files in de originerle FUSE: opnemen</span>
+        <span class="c1">#TODO: CHECK filesto what end this is needed?: fix_states, limit_xtry</span>
+        <span class="c1">#TODO: raise Exception for impossible options</span>
+        <span class="c1">#TODO:  Add attributes to the h5py files</span>
+
+        <span class="c1">#----------------------------------------------------------------------</span>
+        <span class="c1">##CHECK TIME TO CALCULATE</span>
+        <span class="n">elapsed_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">e0</span>
+        <span class="n">cpu_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">clock</span><span class="p">()</span> <span class="o">-</span> <span class="n">c0</span>
+        <span class="k">print</span> <span class="s1">&#39;The elapsed time for the model run was </span><span class="si">%f</span><span class="s1"> seconds&#39;</span> <span class="o">%</span><span class="n">elapsed_time</span>
+        <span class="k">print</span> <span class="s1">&#39;The elapsed cpu-time for the model run was </span><span class="si">%f</span><span class="s1"> seconds&#39;</span> <span class="o">%</span><span class="n">cpu_time</span>
+        <span class="c1">#----------------------------------------------------------------------</span>
+
+        <span class="k">print</span> <span class="s1">&#39;Do not forget to use te close_h5 when finished working on the hdf5 file&#39;</span>
+        <span class="k">return</span> <span class="n">state_out</span><span class="p">,</span> <span class="n">infodict</span></div>
+
+    <span class="k">def</span> <span class="nf">run_MC</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">nruns</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Do a Monte Carlo run of the specified model, using the given distributions</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ------------</span>
+<span class="sd">        nruns: int</span>
+<span class="sd">            number of monte carlo runs to perform of the model</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ---------</span>
+<span class="sd">        output: hdf5 datasets</span>
+<span class="sd">            An update of the self.ofile is made, with the different runs saved in</span>
+<span class="sd">            the hdf5 format</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mcpossible</span> <span class="o">==</span> <span class="bp">False</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;No monte carlo possible, since only one value for each parameter&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nruns</span><span class="p">):</span>
+            <span class="c1">#sample value</span>
+            <span class="k">print</span> <span class="s1">&#39;Simulation &#39;</span><span class="p">,</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span><span class="s1">&#39; starts...&#39;</span>
+            <span class="n">parin</span><span class="o">=</span><span class="p">{}</span>
+            <span class="k">for</span> <span class="n">par</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">:</span>
+                <span class="n">parin</span><span class="p">[</span><span class="n">par</span><span class="p">]</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">[</span><span class="n">par</span><span class="p">]</span><span class="o">.</span><span class="n">aValue</span><span class="p">()</span>
+            <span class="n">parin</span> <span class="o">=</span> <span class="n">Derived_pars</span><span class="p">(</span><span class="n">parin</span><span class="p">)</span>
+
+            <span class="c1">#run model</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">new_pars</span><span class="o">=</span><span class="n">parin</span><span class="p">,</span><span class="n">run_id</span><span class="o">=</span><span class="s1">&#39;MCrun&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">run_EE</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Explicit Euler for solving the equation and comparison</span>
+
+<span class="sd">        !only valid for simple testmodel for comparison</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="n">state</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">totaltimesteps</span><span class="p">)</span>
+        <span class="n">state</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">INIT</span>
+
+        <span class="k">for</span> <span class="n">tstep</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">totaltimesteps</span><span class="o">+</span><span class="mi">1</span><span class="p">)):</span>
+            <span class="n">state</span><span class="p">[</span><span class="n">tstep</span><span class="p">]</span><span class="o">=</span><span class="n">state</span><span class="p">[</span><span class="n">tstep</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">deriv_mod</span><span class="p">([</span><span class="n">state</span><span class="p">[</span><span class="n">tstep</span><span class="o">-</span><span class="mi">1</span><span class="p">]],</span><span class="n">tstep</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">rain_int</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">evapo_int</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">PARS</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">OPTIONS</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">state</span>
+
+    <span class="k">def</span> <span class="nf">control_balance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">runid</span><span class="o">=</span><span class="s1">&#39;testrun&#39;</span><span class="p">):</span>
+        <span class="n">dS</span><span class="o">=</span><span class="n">testModel</span><span class="o">.</span><span class="n">ofile</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="o">+</span><span class="s1">&#39;/&#39;</span><span class="o">+</span><span class="n">run_id</span><span class="o">+</span><span class="s1">&#39;/STATE_S&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">:]</span><span class="o">-</span><span class="n">testModel</span><span class="o">.</span><span class="n">ofile</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="o">+</span><span class="s1">&#39;/&#39;</span><span class="o">+</span><span class="n">run_id</span><span class="o">+</span><span class="s1">&#39;/STATE_S&#39;</span><span class="p">][:][:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="n">errbal</span><span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ofile</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="o">+</span><span class="s1">&#39;/&#39;</span><span class="o">+</span><span class="n">run_id</span><span class="o">+</span><span class="s1">&#39;/FLUX_rain&#39;</span><span class="p">][:][:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">ofile</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="o">+</span><span class="s1">&#39;/&#39;</span><span class="o">+</span><span class="n">run_id</span><span class="o">+</span><span class="s1">&#39;/FLUX_q_all&#39;</span><span class="p">][:][:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> \
+        <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">ofile</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="o">+</span><span class="s1">&#39;/&#39;</span><span class="o">+</span><span class="n">run_id</span><span class="o">+</span><span class="s1">&#39;/FLUX_e_all&#39;</span><span class="p">][:][:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">dS</span>
+
+        <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">errbal</span><span class="p">)</span>
+        <span class="k">print</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">errbal</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">errbal</span>
+
+<div class="viewcode-block" id="pyFUSE.total_outflow"><a class="viewcode-back" href="../../model.html#pyfuse.pyFUSE.total_outflow">[docs]</a>    <span class="k">def</span> <span class="nf">total_outflow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">run_id</span><span class="o">=</span><span class="s1">&#39;testrun&#39;</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Outflow of the catchment in m3/s when hourly timestep</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ------------</span>
+<span class="sd">        run_id: str</span>
+<span class="sd">            name of the run_id to get the flow from</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ----------</span>
+<span class="sd">        totalout: array</span>
+<span class="sd">            array of the flow output</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">area</span> <span class="o">*</span> <span class="mf">1000.0</span> <span class="o">/</span> <span class="p">(</span><span class="mf">60.0</span> <span class="o">*</span> <span class="mf">60.0</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">totalout</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">ofile</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="o">+</span><span class="s1">&#39;/&#39;</span><span class="o">+</span><span class="n">run_id</span><span class="o">+</span><span class="s1">&#39;/FLUX/FLUX_q_all&#39;</span><span class="p">][:]</span><span class="o">*</span><span class="n">v</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">totalout</span></div>
+
+<div class="viewcode-block" id="pyFUSE.array_output"><a class="viewcode-back" href="../../model.html#pyfuse.pyFUSE.array_output">[docs]</a>    <span class="k">def</span> <span class="nf">array_output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">outname</span><span class="p">,</span><span class="n">outtype</span><span class="o">=</span><span class="s1">&#39;FLUX&#39;</span><span class="p">,</span><span class="n">run_id</span><span class="o">=</span><span class="s1">&#39;testrun&#39;</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Get output array of the selected outname; fluxes in mm/hour, states in mm and pars in the given units</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ------------</span>
+<span class="sd">        outtype: str</span>
+<span class="sd">            one of these values: &#39;FLUX&#39;, &#39;STATE&#39; or &#39;PAR&#39;</span>
+<span class="sd">        outname: str</span>
+<span class="sd">            the specific flux/stae of par needed</span>
+<span class="sd">        run_id: str</span>
+<span class="sd">            name of the run_id to get the flow from</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ----------</span>
+<span class="sd">        output: array</span>
+<span class="sd">            output of the specified model output</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ofile</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="o">+</span><span class="n">runid</span><span class="o">+</span><span class="s1">&#39;/&#39;</span><span class="o">+</span><span class="n">outtype</span><span class="o">+</span><span class="s1">&#39;/&#39;</span><span class="o">+</span><span class="n">outtype</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">outname</span><span class="p">][:]</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;Choose output name from model&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="pyFUSE.close_h5"><a class="viewcode-back" href="../../model.html#pyfuse.pyFUSE.close_h5">[docs]</a>    <span class="k">def</span> <span class="nf">close_h5</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        close the hdf5 file to stop the model analysis</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ofile</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="pyFUSE.get_const_info"><a class="viewcode-back" href="../../model.html#pyfuse.pyFUSE.get_const_info">[docs]</a>    <span class="k">def</span> <span class="nf">get_const_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">run_id</span><span class="o">=</span><span class="s1">&#39;testrun1&#39;</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Get overview of the constant values used in the run</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ofile</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="o">+</span><span class="s1">&#39;/&#39;</span><span class="o">+</span><span class="n">run_id</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+            <span class="k">print</span> <span class="n">name</span><span class="o">+</span><span class="s2">&quot;:&quot;</span><span class="p">,</span> <span class="n">value</span></div>
+
+<div class="viewcode-block" id="pyFUSE.get_model_info"><a class="viewcode-back" href="../../model.html#pyfuse.pyFUSE.get_model_info">[docs]</a>    <span class="k">def</span> <span class="nf">get_model_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Get overview of the structure options working with</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ofile</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+            <span class="k">print</span> <span class="n">name</span><span class="o">+</span><span class="s2">&quot;:&quot;</span><span class="p">,</span> <span class="n">value</span></div></div>
+
+
+<div class="viewcode-block" id="Load_model"><a class="viewcode-back" href="../../model.html#pyfuse.Load_model">[docs]</a><span class="k">def</span> <span class="nf">Load_model</span><span class="p">(</span><span class="n">hdffile</span><span class="p">,</span> <span class="n">parfile</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Load an old model run and set up the model</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    -----------</span>
+<span class="sd">    hdffile: HDF5 file</span>
+<span class="sd">        previous simulation outputs file to re-use</span>
+
+<span class="sd">    parfile: parameter textfile</span>
+<span class="sd">        parameterfile of the model under consideration</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    --------</span>
+<span class="sd">    pyFUSE_Model: model instance</span>
+<span class="sd">        loaded model to do calculations</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ----------</span>
+<span class="sd">    pyFUSE.Set_pars:</span>
+<span class="sd">        Loading in parameter sets example of input parameter file</span>
+
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="c1">#GET model name</span>
+    <span class="k">if</span> <span class="n">hdffile</span><span class="p">[</span><span class="o">-</span><span class="mi">5</span><span class="p">:]</span><span class="o">==</span><span class="s1">&#39;.hdf5&#39;</span><span class="p">:</span>
+        <span class="n">name</span><span class="o">=</span><span class="n">hdffile</span><span class="p">[:</span><span class="o">-</span><span class="mi">5</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">name</span><span class="o">=</span><span class="n">hdffile</span>
+
+    <span class="c1">#LOAD hdf5 file</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">ff</span> <span class="o">=</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">hdffile</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;Wrong hdf5 file&#39;</span><span class="p">)</span>
+
+    <span class="n">modelname</span> <span class="o">=</span> <span class="n">ff</span><span class="o">.</span><span class="n">keys</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="c1">#GET model OPTIONS</span>
+    <span class="n">options</span><span class="o">=</span><span class="p">{}</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">ff</span><span class="p">[</span><span class="n">modelname</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+        <span class="n">options</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="c1">#GET model constant values</span>
+    <span class="n">cnt</span><span class="o">=</span><span class="p">{}</span>
+    <span class="n">arun</span><span class="o">=</span><span class="n">ff</span><span class="p">[</span><span class="n">modelname</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span> <span class="c1">#assumes all runs with same constant values</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">ff</span><span class="p">[</span><span class="n">modelname</span><span class="o">+</span><span class="s1">&#39;/&#39;</span><span class="o">+</span> <span class="n">arun</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+        <span class="n">cnt</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="c1">#GET model aprameters =&gt; use parfile</span>
+    <span class="c1">#from file</span>
+
+    <span class="c1">#Get rain</span>
+    <span class="n">rain</span> <span class="o">=</span> <span class="n">ff</span><span class="p">[</span><span class="n">modelname</span><span class="o">+</span><span class="s1">&#39;/&#39;</span><span class="o">+</span> <span class="n">arun</span><span class="o">+</span><span class="s1">&#39;/FLUX/FLUX_rain&#39;</span><span class="p">][:]</span>
+
+    <span class="c1">#Get evapotranspiration</span>
+    <span class="n">evapo</span> <span class="o">=</span> <span class="n">ff</span><span class="p">[</span><span class="n">modelname</span><span class="o">+</span><span class="s1">&#39;/&#39;</span><span class="o">+</span> <span class="n">arun</span><span class="o">+</span><span class="s1">&#39;/FLUX/FLUX_pet&#39;</span><span class="p">][:]</span>
+    <span class="n">ff</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="n">Model</span><span class="o">=</span><span class="n">pyFUSE_Model</span><span class="p">(</span><span class="n">modelname</span><span class="p">,</span><span class="n">options</span><span class="p">,</span><span class="n">parfile</span><span class="p">,</span><span class="n">rain</span><span class="p">,</span><span class="n">evapo</span><span class="p">,</span><span class="n">cnt</span><span class="p">,</span><span class="n">oldfile</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">Model</span></div>
+
+
+
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">pyfuse 1.0.1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2012, S. Van Hoey.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.5.
+    </div>
+  </body>
+</html>

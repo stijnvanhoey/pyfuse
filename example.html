@@ -1,0 +1,166 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Tutorial &mdash; pyfuse 1.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="pyfuse 1.0.1 documentation" href="index.html" />
+    <link rel="prev" title="Extra Functions" href="extra.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="extra.html" title="Extra Functions"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">pyfuse 1.0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="tutorial">
+<h1>Tutorial<a class="headerlink" href="#tutorial" title="Permalink to this headline">¶</a></h1>
+<p>The building and simulation of a model structure is performed in the pyFSE
+package as follows:</p>
+<p>Import the appropriate modules and packages for the analysis:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+</pre></div>
+</div>
+<p>Load the pyFUSE package (make sure it is installed or added to the Python path):</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pyFUSE</span> <span class="kn">as</span> <span class="nn">pf</span>
+</pre></div>
+</div>
+<p>Load the example data of the Nete catchment:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">datapath</span><span class="o">=</span><span class="s1">&#39;.\exampledata&#39;</span>
+<span class="n">rain</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">datapath</span><span class="p">,</span><span class="s1">&#39;Rain_Cal_warm_1jan02_31dec05&#39;</span><span class="p">))</span>
+<span class="n">evapo</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">datapath</span><span class="p">,</span><span class="s1">&#39;ET_Cal_warm_1jan02_31dec05&#39;</span><span class="p">))</span>
+<span class="n">Flow_obs</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">datapath</span><span class="p">,</span><span class="s1">&#39;Flow_Cal_Meas_13aug02_31dec05&#39;</span><span class="p">))</span> <span class="c1">#data in m3/s</span>
+<span class="n">ID</span><span class="o">=</span><span class="n">rain</span><span class="o">.</span><span class="n">size</span><span class="o">-</span><span class="n">Flow_obs</span><span class="o">.</span><span class="n">size</span> <span class="c1">#to exclude warming up period</span>
+</pre></div>
+</div>
+<dl class="docutils">
+<dt>To build a model, 3 setup files are needed:</dt>
+<dd><ul class="first last simple">
+<li>Model structure file</li>
+<li>Parameter file</li>
+<li>constant values file</li>
+</ul>
+</dd>
+</dl>
+<p>General functions can be used to load the files:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">topt</span><span class="o">=</span><span class="n">pf</span><span class="o">.</span><span class="n">Set_options</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">datapath</span><span class="p">,</span><span class="s1">&#39;pyFUSE_strinput.txt&#39;</span><span class="p">))</span>
+<span class="n">tcnt</span><span class="o">=</span><span class="n">pf</span><span class="o">.</span><span class="n">Set_cnts</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">datapath</span><span class="p">,</span><span class="s1">&#39;pyFUSE_ctninput.txt&#39;</span><span class="p">))</span>
+<span class="n">tpar</span><span class="o">=</span><span class="n">pf</span><span class="o">.</span><span class="n">Set_pars</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">datapath</span><span class="p">,</span><span class="s1">&#39;pyFUSE_parinput.txt&#39;</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>Create the model instance:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">tmod</span> <span class="o">=</span> <span class="n">pf</span><span class="o">.</span><span class="n">pyFUSE_Model</span><span class="p">(</span><span class="s1">&#39;tutorialmodel&#39;</span><span class="p">,</span><span class="n">topt</span><span class="p">,</span><span class="n">tpar</span><span class="p">,</span><span class="n">rain</span><span class="p">,</span><span class="n">evapo</span><span class="p">,</span><span class="n">tcnt</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Run the model and create output:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">output</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">tmod</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">run_id</span><span class="o">=</span><span class="s1">&#39;Testrun&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Make a plot of the model run, with observations and simulation in m3/s:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">tmod</span><span class="o">.</span><span class="n">total_outflow</span><span class="p">(</span><span class="n">run_id</span><span class="o">=</span><span class="s1">&#39;Testrun&#39;</span><span class="p">)[</span><span class="n">ID</span><span class="p">:],</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;Simulation&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">Flow_obs</span><span class="p">,</span><span class="s1">&#39;--&#39;</span><span class="p">,</span><span class="n">label</span><span class="o">=</span><span class="s1">&#39;Observation&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Time (hour)&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">r&#39;Flow ($m^3/s$)&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<a class="reference internal image-reference" href="exampleoutput.png"><img alt="exampleoutput.png" src="exampleoutput.png" style="width: 753px; height: 308px;" /></a>
+<p>Run 100 Monte Carlo Run of the model:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">nMC</span><span class="o">=</span><span class="mi">100</span>
+<span class="n">tmod</span><span class="o">.</span><span class="n">run_MC</span><span class="p">(</span><span class="n">nMC</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>End analysis and close the hdf5 file:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">tmod</span><span class="o">.</span><span class="n">close_h5</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="extra.html"
+                        title="previous chapter">Extra Functions</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/example.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="extra.html" title="Extra Functions"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">pyfuse 1.0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2012, S. Van Hoey.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.5.
+    </div>
+  </body>
+</html>

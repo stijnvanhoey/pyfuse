@@ -1,0 +1,382 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Model setup functions &mdash; pyfuse 1.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="pyfuse 1.0.1 documentation" href="index.html" />
+    <link rel="next" title="Model Parameters" href="pars.html" />
+    <link rel="prev" title="Model Processing" href="model.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="pars.html" title="Model Parameters"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="model.html" title="Model Processing"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">pyfuse 1.0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="model-setup-functions">
+<h1>Model setup functions<a class="headerlink" href="#model-setup-functions" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="model-structure-construction-options">
+<h2>Model structure construction options<a class="headerlink" href="#model-structure-construction-options" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="pyfuse.Set_options">
+<code class="descclassname">pyfuse.</code><code class="descname">Set_options</code><span class="sig-paren">(</span><em>filename=False</em>, <em>default=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyfuse/modelsetup.html#Set_options"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyfuse.Set_options" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read options from file or if no file take standard implemented here</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>filename: str</strong></p>
+<blockquote>
+<div><p>name of the Options containing file, following the given template</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Dictionary, used to set-up the model structure</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<p>Template file for model options:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="c1">######################################################################</span>
+<span class="c1">##    Model options input file</span>
+<span class="c1">##    The options defined here are used to set up the model structure</span>
+<span class="c1">##</span>
+<span class="c1">##    (1) upper-layer architecture: uplayer</span>
+<span class="c1">##        tension1_1: upper layer broken up into tension and free storage</span>
+<span class="c1">##        tension2_1: tension storage sub-divided into recharge and excess</span>
+<span class="c1">##        onestate_1: upper layer defined by a single state variable</span>
+<span class="c1">##        surface1_1: upper layer defined by a surface storage representing and a tension reservoir</span>
+<span class="c1">##    (2) lower-layer architecture and baseflow: lowlayer_baseflow</span>
+<span class="c1">##        tens2pll_2: tension reservoir plus two parallel tanks</span>
+<span class="c1">##        unlimfrc_2: baseflow resvr of unlimited size, frac rate</span>
+<span class="c1">##        unlimpow_2: baseflow resvr of unlimited size, power recession</span>
+<span class="c1">##        fixedsiz_2: baseflow reservoir of fixed size</span>
+<span class="c1">##    (3) surface runoff: surface</span>
+<span class="c1">##        arno_x_vic: ARNO/Xzang/VIC parameterization (upper zone control)</span>
+<span class="c1">##        prms_varnt: PRMS variant (fraction of upper tension storage)</span>
+<span class="c1">##        tmdl_param: TOPMODEL parameterization (only valid for TOPMODEL qb)</span>
+<span class="c1">##        oflwtresh: threshold based overland flow generation</span>
+<span class="c1">##    (4) percolation</span>
+<span class="c1">##        perc_f2sat: water from (field cap to sat) avail for percolation</span>
+<span class="c1">##        perc_w2sat: water from (wilt pt to sat) avail for percolation</span>
+<span class="c1">##        perc_lower: perc defined by moisture content in lower layer (SAC)</span>
+<span class="c1">##        perc_tresh: threshold based percolation</span>
+<span class="c1">##        perc_nodrain: percolation represents the baseflow routing</span>
+<span class="c1">##    (5) evaporation</span>
+<span class="c1">##        sequential: sequential evaporation model</span>
+<span class="c1">##        rootweight: root weighting</span>
+<span class="c1">##    (6) interflow</span>
+<span class="c1">##        intflwnone: no interflow</span>
+<span class="c1">##        intflwsome: linear interflow</span>
+<span class="c1">##        intflwtresh: threshold based interflow generation</span>
+<span class="c1">##    (7) routing</span>
+<span class="c1">##        rout_all1: touting combined subflows</span>
+<span class="c1">##        no_rout: no routing</span>
+<span class="c1">##        rout_ind: rout subflows individual</span>
+<span class="c1">######################################################################</span>
+<span class="c1">## MODEL DECISION       =   OPTION</span>
+<span class="n">uplayer</span>                         <span class="o">=</span>       <span class="n">onestate_1</span>
+<span class="n">lowlayer_baseflow</span>       <span class="o">=</span>       <span class="n">unlimfrc_2</span>
+<span class="n">surface</span>                         <span class="o">=</span>       <span class="n">arno_x_vic</span>
+<span class="n">percolation</span>                     <span class="o">=</span>       <span class="n">perc_w2sat</span>
+<span class="n">evaporation</span>                     <span class="o">=</span>       <span class="n">sequential</span>
+<span class="n">interflow</span>                       <span class="o">=</span>       <span class="n">intflwnone</span>
+<span class="n">routing</span>                         <span class="o">=</span>       <span class="n">rout_all1</span>
+</pre></div>
+</div>
+<p>Some well-known model structures can be selected by calling the name of the model,</p>
+<p>for the NAM model structure <a class="footnote-reference" href="#id3" id="id1">[1]</a>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pf</span><span class="o">.</span><span class="n">Set_options</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span><span class="n">default</span><span class="o">=</span><span class="s1">&#39;NAM&#39;</span><span class="p">)</span>
+<span class="go">NAM model options are selected</span>
+<span class="go">The selected options are</span>
+<span class="go">{&#39;evaporation&#39;: &#39;sequential&#39;,</span>
+<span class="go"> &#39;interflow&#39;: &#39;intflwtresh&#39;,</span>
+<span class="go"> &#39;lowlayer_baseflow&#39;: &#39;unlimfrc_2&#39;,</span>
+<span class="go"> &#39;percolation&#39;: &#39;perc_tresh&#39;,</span>
+<span class="go"> &#39;reservoirs&#39;: &#39;220&#39;,</span>
+<span class="go"> &#39;routing&#39;: &#39;rout_ind&#39;,</span>
+<span class="go"> &#39;surface&#39;: &#39;oflwtresh&#39;,</span>
+<span class="go"> &#39;uplayer&#39;: &#39;surface1_1&#39;}</span>
+</pre></div>
+</div>
+<p>for the PDM model structure <a class="footnote-reference" href="#id4" id="id2">[2]</a>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pf</span><span class="o">.</span><span class="n">Set_options</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span><span class="n">default</span><span class="o">=</span><span class="s1">&#39;PDM&#39;</span><span class="p">)</span>
+<span class="go">PDM model options are selected</span>
+<span class="go">The selected options are</span>
+<span class="go">{&#39;evaporation&#39;: &#39;sequential&#39;,</span>
+<span class="go"> &#39;interflow&#39;: &#39;intflwnone&#39;,</span>
+<span class="go"> &#39;lowlayer_baseflow&#39;: &#39;unlimfrc_2&#39;,</span>
+<span class="go"> &#39;percolation&#39;: &#39;perc_w2sat&#39;,</span>
+<span class="go"> &#39;routing&#39;: &#39;rout_ind&#39;,</span>
+<span class="go"> &#39;reservoirs&#39;: &#39;200&#39;,</span>
+<span class="go"> &#39;surface&#39;: &#39;arno_x_vic&#39;,</span>
+<span class="go"> &#39;uplayer&#39;: &#39;onestate_1&#39;}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="model-parameters">
+<h2>Model parameters<a class="headerlink" href="#model-parameters" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="pyfuse.Set_pars">
+<code class="descclassname">pyfuse.</code><code class="descname">Set_pars</code><span class="sig-paren">(</span><em>filename</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyfuse/modelsetup.html#Set_pars"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyfuse.Set_pars" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read info from file and put in parameter dictionary
+and calculate derived parameter values</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>filename: str</strong></p>
+<blockquote>
+<div><p>name of the parameters containing file, following the given template</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Dictionary, used to parameterize the model structure</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyfuse.Set_pars_for_run">
+<code class="descclassname">pyfuse.</code><code class="descname">Set_pars_for_run</code><span class="sig-paren">(</span><em>Parlib</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyfuse/modelsetup.html#Set_pars_for_run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyfuse.Set_pars_for_run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve optguess values of parameters to calculate a simulation</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>Parlib: dict</strong></p>
+<blockquote>
+<div><p>Dictionary containing the parameter characteristics, with distribution
+and extra information</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">pars: dict</p>
+<blockquote class="last">
+<div><p>Dictionary with parnames and their repsective values to simulate</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<p>Template file for parameters:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span>###############################################
+##    Model Parameter input file
+##    The parameter is defined by his distribution, boundaries and extra info needed by distribution
+##    provide on each line one parameter with following information:
+##
+##    name : string
+##        Name of the parameter
+##    minval : float
+##        Minimum value of the parameter distribution
+##    maxval :  float
+##        Maximum value of the parameter distribution
+##    optguess : float
+##        Optimal guess of the parameter, must be between min and max value
+##    pardistribution : string
+##        choose a distributionfrom: randomUniform, randomTriangular, randomTrapezoidal, randomNormal, randomLogNormal
+##    *kargs  : de
+##        Extra arguments necessary for the chosen distribution
+#################################################
+## NAME MIN MAX OPTGUESS DISTRIBUTION ARGS*
+S1max   50. 5000.000 400. randomTriangular 1000.
+S2max   100. 10000.000 1000. randomNormal 500. 25.
+fitens 0.01 1.0 0.99 randomLogNormal    0.5 0.2
+firchr 0.050 0.950 0.5 randomTrapezoidal 0.4 0.6
+fibase 0.050 0.950 0.5 randomUniform
+r1 0.050 0.950 0.5 randomUniform
+ku 0.01 1000. 0.044 randomUniform
+c 0.99 20.0 1. randomUniform
+alfa 1.000 250. 150. randomUniform
+psi 1.000 5.0 2.5 randomUniform
+kappa 0.050 0.950 0.5 randomUniform
+ki 0.001 1000. 0.00833 randomUniform
+ks 0.001 10000. 0.5 randomUniform
+n 1.000 10. 3. randomUniform
+v 0.00001 0.250 0.004   randomUniform
+vA 0.001 0.250  0.0015 randomUniform
+vB 0.001 0.250 0.0015 randomUniform
+Acmax 0.050 0.950 0.5 randomUniform
+b 0.001 3.0 0.2 randomUniform
+loglambda       5.000 10.0 7.5 randomUniform
+chi 2.000 5.0 3.5 randomUniform
+mut 0.010 5.0 0.6 randomUniform
+be 0.99 4. 3.1 randomUniform
+alfah   0.01 0.99 0.5 randomUniform
+tg 0.0 0.7 0.3 randomUniform
+tif 0.0 0.7 0.26 randomUniform
+tof 0.0 0.7 0.12 randomUniform
+ko 0.01 0.99 0.15 randomUniform
+timeo 2. 48 24 randomUniform
+timei 2. 250. 20 randomUniform
+timeb 200. 10000. 2100. randomUniform
+</pre></div>
+</div>
+</div>
+<div class="section" id="model-constant-values">
+<h2>Model constant values<a class="headerlink" href="#model-constant-values" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="pyfuse.Set_cnts">
+<code class="descclassname">pyfuse.</code><code class="descname">Set_cnts</code><span class="sig-paren">(</span><em>filename=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyfuse/modelsetup.html#Set_cnts"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyfuse.Set_cnts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read info from file and put in constants dictionary</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>filename: str</strong></p>
+<blockquote>
+<div><p>name of the constants containing file, following the given template</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Dictionary, used to simulate the model</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<p>Template file for constants:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="c1">#######################################################################</span>
+<span class="c1">##      Model constants values</span>
+<span class="c1">##      The options defined here are used to set up the model structure</span>
+<span class="c1">##</span>
+<span class="c1">##        area: the size of the catchment in km2</span>
+<span class="c1">##        timestep: timestep relative to the hourly timestep</span>
+<span class="c1">#######################################################################</span>
+<span class="c1">## CONSTANT                      =   VALUE</span>
+<span class="n">area</span>                            <span class="o">=</span>       <span class="mf">362.</span>
+<span class="n">timestep</span>                        <span class="o">=</span>       <span class="mf">1.</span>
+</pre></div>
+</div>
+<div class="section" id="references">
+<h3>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h3>
+<table class="docutils footnote" frame="void" id="id3" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id1">[1]</a></td><td>DHI. MIKE 11, A Modelling System for Rivers and Channels, Reference Manual. Horsholm, Denmark: DHI Water &amp; Environment, 2008.</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="id4" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id2">[2]</a></td><td>Moore, R J. The PDM Rainfall-runoff Model. Hydrology and Earth System Sciences 11, no. 1 (2007): 483-499.</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Model setup functions</a><ul>
+<li><a class="reference internal" href="#model-structure-construction-options">Model structure construction options</a></li>
+<li><a class="reference internal" href="#model-parameters">Model parameters</a></li>
+<li><a class="reference internal" href="#model-constant-values">Model constant values</a><ul>
+<li><a class="reference internal" href="#references">References</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="model.html"
+                        title="previous chapter">Model Processing</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="pars.html"
+                        title="next chapter">Model Parameters</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/setup.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="pars.html" title="Model Parameters"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="model.html" title="Model Processing"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">pyfuse 1.0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2012, S. Van Hoey.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.5.
+    </div>
+  </body>
+</html>
