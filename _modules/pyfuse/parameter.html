@@ -1,0 +1,405 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pyfuse.parameter &mdash; pyfuse 1.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="pyfuse 1.0.1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for pyfuse.parameter</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on Wed Oct 10 16:37:52 2012</span>
+
+<span class="sd">@author: VHOEYS</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+
+<span class="c1">#from pyFUSE.distributions import *</span>
+<span class="kn">from</span> <span class="nn">distributions</span> <span class="kn">import</span> <span class="o">*</span>
+
+<div class="viewcode-block" id="ModPar"><a class="viewcode-back" href="../../pars.html#pyfuse.ModPar">[docs]</a><span class="k">class</span> <span class="nc">ModPar</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>    
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Model Parameter class</span>
+<span class="sd">    </span>
+<span class="sd">    The parameter is defined by his distribution, boundaries and optimal guess</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    name : string</span>
+<span class="sd">        Name of the parameter</span>
+<span class="sd">    minval : float</span>
+<span class="sd">        Minimum value of the parameter distribution</span>
+<span class="sd">    maxval :  float</span>
+<span class="sd">        Maximum value of the parameter distribution</span>
+<span class="sd">    optguess : float</span>
+<span class="sd">        Optimal guess of the parameter, must be between min and max value</span>
+<span class="sd">    pardistribution : string</span>
+<span class="sd">        choose a distributionfrom: randomUniform, randomTriangular, randomTrapezoidal, randomNormal, randomLogNormal</span>
+<span class="sd">    *kargs  : </span>
+<span class="sd">        Extra arguments necessaty for the chosen distribution</span>
+<span class="sd">    </span>
+<span class="sd">    Examples</span>
+<span class="sd">    ----------</span>
+<span class="sd">    &gt;&gt;&gt; import pyFUSE as pf</span>
+<span class="sd">    &gt;&gt;&gt; par1=pf.ModPar(&#39;parameter1&#39;,0.0,3.0,2.5,&#39;randomUniform&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; par1.aValue()</span>
+<span class="sd">    &gt;&gt;&gt; 2.20263437200365 #random</span>
+<span class="sd">    &gt;&gt;&gt; par1.optguess</span>
+<span class="sd">    &gt;&gt;&gt; 2.5</span>
+<span class="sd">    &gt;&gt;&gt; par1.pardistribution</span>
+<span class="sd">    &gt;&gt;&gt; &#39;randomUniform</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">name</span><span class="p">,</span><span class="n">minval</span><span class="p">,</span><span class="n">maxval</span><span class="p">,</span><span class="n">optguess</span><span class="p">,</span><span class="n">pardistribution</span><span class="p">,</span><span class="o">*</span><span class="n">kargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pardistribution</span><span class="p">,</span><span class="nb">str</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Parameter name must be a string&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="o">=</span><span class="n">name</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">minval</span><span class="p">,</span><span class="nb">float</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Minvalue must be Float&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">min</span> <span class="o">=</span> <span class="n">minval</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">minval</span><span class="p">,</span><span class="nb">float</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Maxvalue must be Float&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">max</span> <span class="o">=</span> <span class="n">maxval</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bound</span> <span class="o">=</span> <span class="n">maxval</span><span class="o">-</span><span class="n">minval</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bound</span> <span class="o">&lt;</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;Minimal and maximum value of bounds interchanged&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">optguess</span><span class="p">,</span><span class="nb">float</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Maxvalue must be Float&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="n">minval</span><span class="o">&lt;</span><span class="n">optguess</span><span class="o">&lt;</span><span class="n">maxval</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;optimal guess must be between min and max value&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">optguess</span> <span class="o">=</span> <span class="n">optguess</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pardistribution</span><span class="p">,</span><span class="nb">str</span><span class="p">):</span> <span class="c1">#todo: aangeven welke types mogelijk</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Pardistribution must be a string describing the Priori estimated distribution; choose from: randomUniform, randomTriangular, randomTrapezoidal, randomNormal, randomLogNormal&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pardistribution</span> <span class="o">=</span> <span class="n">pardistribution</span>
+            
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pardistribution</span> <span class="o">==</span><span class="s1">&#39;randomUniform&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">kargs</span><span class="p">)</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;No extra arguments added when using randomuniform&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;NaN&#39;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mode1</span><span class="o">=</span><span class="s1">&#39;NaN&#39;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mode2</span><span class="o">=</span><span class="s1">&#39;NaN&#39;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="o">=</span><span class="s1">&#39;NaN&#39;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="o">=</span><span class="s1">&#39;NaN&#39;</span>
+
+<span class="c1">#        elif self.pardistribution ==&#39;discreteUniform&#39;:</span>
+<span class="c1">#            if not len(kargs)==0:</span>
+<span class="c1">#                raise Exception(&#39;No extra arguments added when using discreteuniform&#39;)</span>
+<span class="c1">#            self.mode=&#39;NaN&#39;</span>
+<span class="c1">#            self.mode1=&#39;NaN&#39;</span>
+<span class="c1">#            self.mode2=&#39;NaN&#39;</span>
+<span class="c1">#            self.mu=&#39;NaN&#39;</span>
+<span class="c1">#            self.sigma=&#39;NaN&#39;</span>
+            
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">pardistribution</span> <span class="o">==</span><span class="s1">&#39;randomTriangular&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">kargs</span><span class="p">)</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;randomTraingular needs one extra argument: mode (center of triangle)&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">minval</span><span class="o">&lt;</span><span class="n">kargs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">&lt;</span><span class="n">maxval</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;mode must be between min and max value&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">kargs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="nb">float</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;mode must be Float&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="o">=</span><span class="n">kargs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mode1</span><span class="o">=</span><span class="s1">&#39;NaN&#39;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mode2</span><span class="o">=</span><span class="s1">&#39;NaN&#39;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="o">=</span><span class="s1">&#39;NaN&#39;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="o">=</span><span class="s1">&#39;NaN&#39;</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">pardistribution</span> <span class="o">==</span><span class="s1">&#39;randomTrapezoidal&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">kargs</span><span class="p">)</span><span class="o">==</span><span class="mi">2</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;randomTrapezoidal needs two extra argument: mode1 and mode2&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">kargs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="nb">float</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;mode 1 must be Float&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">kargs</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="nb">float</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;mode 2 must be Float&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">kargs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">&lt;</span><span class="n">kargs</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;mode 1 must have smaller value then mode 2&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">minval</span><span class="o">&lt;</span><span class="n">kargs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">&lt;</span><span class="n">maxval</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;mode 1 must be between min and max value&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">minval</span><span class="o">&lt;</span><span class="n">kargs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">&lt;</span><span class="n">maxval</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;mode 2 must be between min and max value&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">mode1</span><span class="o">=</span><span class="n">kargs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">mode2</span><span class="o">=</span><span class="n">kargs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="o">=</span><span class="s1">&#39;NaN&#39;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="o">=</span><span class="s1">&#39;NaN&#39;</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">pardistribution</span> <span class="o">==</span><span class="s1">&#39;randomNormal&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">kargs</span><span class="p">)</span><span class="o">==</span><span class="mi">2</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;randomNormal needs two extra argument: mean and var&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="mi">2</span><span class="o">*</span><span class="n">kargs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="n">kargs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">&lt;</span><span class="n">maxval</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;maxval smaller then average+2*std&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">kargs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="mi">2</span><span class="o">*</span><span class="n">kargs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">&lt;</span><span class="n">maxval</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;minval higher then average-2*std&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="o">=</span><span class="n">kargs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="o">=</span><span class="n">kargs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">pardistribution</span> <span class="o">==</span><span class="s1">&#39;randomLogNormal&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">kargs</span><span class="p">)</span><span class="o">==</span><span class="mi">2</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;randomNormal needs two extra argument: mode1 and mode2&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="mi">2</span><span class="o">*</span><span class="n">kargs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="n">kargs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">&lt;</span><span class="n">maxval</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;maxval smaller then average+2*std&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">kargs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="mi">2</span><span class="o">*</span><span class="n">kargs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">&lt;</span><span class="n">maxval</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;minval higher then average-2*std&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="o">=</span><span class="n">kargs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="o">=</span><span class="n">kargs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>             
+               
+                
+        <span class="c1">#to add: LHSuniform, LHSnormal, pseudorandomUniform, pseudirandomNormal</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;Wrong ditribution name! choose from: randomUniform, randomTriangular, randomTrapezoidal, randomNormal, randomLogNormal&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ModPar.MCSample"><a class="viewcode-back" href="../../pars.html#pyfuse.ModPar.MCSample">[docs]</a>    <span class="k">def</span> <span class="nf">MCSample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">nruns</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Give a sample of nMC samples from the par distribution </span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        nruns: int</span>
+<span class="sd">            number of Monte Carlo samples to take</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        --------</span>
+<span class="sd">        mcsample: array</span>
+<span class="sd">            numpy array with the specified number of Monte Carlo samples</span>
+<span class="sd">        </span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pardistribution</span> <span class="o">==</span><span class="s1">&#39;randomUniform&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">randomUniform</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">min</span><span class="p">,</span><span class="n">right</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max</span><span class="p">,</span><span class="n">rnsize</span><span class="o">=</span><span class="n">nruns</span><span class="p">)</span>
+<span class="c1">#        if self.pardistribution ==&#39;discreteUniform&#39;:</span>
+<span class="c1">#            return randomUniform(left=self.min,right=self.max,rnsize=nruns)            </span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">pardistribution</span> <span class="o">==</span><span class="s1">&#39;randomTriangular&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">randomTriangular</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">min</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max</span><span class="p">,</span> <span class="n">rnsize</span><span class="o">=</span><span class="n">nruns</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">pardistribution</span> <span class="o">==</span><span class="s1">&#39;randomTrapezoidal&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">randomTrapezoidal</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">min</span><span class="p">,</span><span class="n">mode1</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mode1</span><span class="p">,</span><span class="n">mode2</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mode2</span><span class="p">,</span><span class="n">right</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max</span><span class="p">,</span><span class="n">rnsize</span><span class="o">=</span><span class="n">nruns</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">pardistribution</span> <span class="o">==</span><span class="s1">&#39;randomNormal&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">randomNormal</span><span class="p">(</span><span class="n">mu</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="p">,</span> <span class="n">rnsize</span><span class="o">=</span><span class="n">nruns</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">pardistribution</span> <span class="o">==</span><span class="s1">&#39;randomLogNormal&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">randomLogNormal</span><span class="p">(</span><span class="n">mu</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="p">,</span> <span class="n">rnsize</span><span class="o">=</span><span class="n">nruns</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ModPar.aValue"><a class="viewcode-back" href="../../pars.html#pyfuse.ModPar.aValue">[docs]</a>    <span class="k">def</span> <span class="nf">aValue</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Sample 1 value of the pardistribution</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pardistribution</span> <span class="o">==</span><span class="s1">&#39;randomUniform&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">randomUniform</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">min</span><span class="p">,</span><span class="n">right</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max</span><span class="p">,</span><span class="n">rnsize</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">pardistribution</span> <span class="o">==</span><span class="s1">&#39;randomTriangular&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">randomTriangular</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">min</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max</span><span class="p">,</span> <span class="n">rnsize</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">pardistribution</span> <span class="o">==</span><span class="s1">&#39;randomTrapezoidal&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">randomTrapezoidal</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">min</span><span class="p">,</span><span class="n">mode1</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mode1</span><span class="p">,</span><span class="n">mode2</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mode2</span><span class="p">,</span><span class="n">right</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max</span><span class="p">,</span><span class="n">rnsize</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">pardistribution</span> <span class="o">==</span><span class="s1">&#39;randomNormal&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">randomNormal</span><span class="p">(</span><span class="n">mu</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="p">,</span> <span class="n">rnsize</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">pardistribution</span> <span class="o">==</span><span class="s1">&#39;randomLogNormal&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">randomLogNormal</span><span class="p">(</span><span class="n">mu</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="p">,</span> <span class="n">rnsize</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span></div>
+    
+<div class="viewcode-block" id="ModPar.set_optguess"><a class="viewcode-back" href="../../pars.html#pyfuse.ModPar.set_optguess">[docs]</a>    <span class="k">def</span> <span class="nf">set_optguess</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">value</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Change the optimal guess value of the parameter</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        value: float</span>
+<span class="sd">            New value for optimal guess</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">optguess</span><span class="o">=</span><span class="n">value</span></div>
+    
+    <span class="k">def</span> <span class="nf">optguess_from_optimization</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;Not provided yet since integration with total model is not yet provided&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ModPar.ahist"><a class="viewcode-back" href="../../pars.html#pyfuse.ModPar.ahist">[docs]</a>    <span class="k">def</span> <span class="nf">ahist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">nruns</span><span class="p">,</span><span class="n">nbins</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span><span class="n">saveit</span><span class="o">=</span><span class="s1">&#39;show&#39;</span><span class="p">,</span><span class="o">*</span><span class="n">args</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Returns a histogram from the current parameter distribution</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ------------</span>
+<span class="sd">        nruns: int</span>
+<span class="sd">            number of Monte Carlo samples</span>
+<span class="sd">        nbins: int</span>
+<span class="sd">            number of bins to use in the histogram</span>
+<span class="sd">        saveit; &#39;show&#39; or True</span>
+<span class="sd">            if True, figure is saved, otherwise the picture is shown</span>
+<span class="sd">        *args:</span>
+<span class="sd">            matplotlib histogram keyword arguments</span>
+<span class="sd">        **kwargs:</span>
+<span class="sd">            kwargs are used to update the properties of the</span>
+<span class="sd">            class:`~matplotlib.patches.Patch` instances returned by *hist*</span>
+<span class="sd">                </span>
+<span class="sd">        Returns</span>
+<span class="sd">        --------</span>
+<span class="sd">        fig: </span>
+<span class="sd">            figure with the histogram</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">MCSample</span><span class="p">(</span><span class="n">nruns</span><span class="p">),</span><span class="n">bins</span><span class="o">=</span><span class="n">nbins</span><span class="p">,</span><span class="o">*</span><span class="n">args</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">saveit</span><span class="o">==</span><span class="bp">True</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s1">&#39;par_&#39;</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="o">+</span><span class="s1">&#39;_hist_&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">nruns</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;runs.png&#39;</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">facecolor</span><span class="o">=</span><span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="n">edgecolor</span><span class="o">=</span><span class="s1">&#39;w&#39;</span><span class="p">,</span><span class="n">orientation</span><span class="o">=</span><span class="s1">&#39;portrait&#39;</span><span class="p">,</span> <span class="n">papertype</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">transparent</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">saveit</span><span class="o">==</span><span class="s1">&#39;show&#39;</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">fig</span></div>
+
+<div class="viewcode-block" id="ModPar.LatinH"><a class="viewcode-back" href="../../pars.html#pyfuse.ModPar.LatinH">[docs]</a>    <span class="k">def</span> <span class="nf">LatinH</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">nruns</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Return a sample of nMC samples from the par distribution </span>
+<span class="sd">        with Latin Hypercube sampling (always randomUniform)</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        -----------</span>
+<span class="sd">        nruns: int</span>
+<span class="sd">            number of Latin HYpercube samples to take</span>
+<span class="sd">               </span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">pardistribution</span> <span class="o">==</span><span class="s1">&#39;randomUniform&#39;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;Latin hypercube only supported for uniform distribution&#39;</span><span class="p">)</span>
+            
+        <span class="n">pranges</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
+        <span class="n">low</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">min</span>
+        <span class="n">high</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max</span>
+        <span class="n">delta</span><span class="o">=</span><span class="p">(</span><span class="n">high</span><span class="o">-</span><span class="n">low</span><span class="p">)</span><span class="o">/</span><span class="nb">float</span><span class="p">(</span><span class="n">nruns</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nruns</span><span class="p">):</span>
+            <span class="n">pranges</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">low</span><span class="o">+</span><span class="n">j</span><span class="o">*</span><span class="n">delta</span><span class="p">,</span><span class="n">low</span><span class="o">+</span><span class="p">(</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">delta</span><span class="p">))</span>
+
+        <span class="n">s</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nruns</span><span class="p">)</span>
+        <span class="n">result</span><span class="o">=</span><span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nruns</span><span class="p">):</span>
+            <span class="n">a</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">s</span><span class="p">,</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+            <span class="n">s</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+
+        <span class="n">sample</span><span class="o">=</span><span class="p">[]</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="p">)):</span>
+            <span class="n">sample</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pranges</span><span class="p">[</span><span class="n">result</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">sample</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="reScale"><a class="viewcode-back" href="../../pars.html#pyfuse.reScale">[docs]</a><span class="k">def</span> <span class="nf">reScale</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span><span class="n">vmin</span><span class="p">,</span><span class="n">vmax</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Rescale the sampled values between 0 and 1 towards the real boundaries of the pars</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    -----------</span>
+<span class="sd">    arr: array</span>
+<span class="sd">        array of the sampled values</span>
+<span class="sd">    vmin: float</span>
+<span class="sd">        minimal value to rescale to</span>
+<span class="sd">    vmax: float</span>
+<span class="sd">        maximum value to rescale to</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">arrout</span><span class="o">=</span><span class="p">(</span><span class="n">vmax</span><span class="o">-</span><span class="n">vmin</span><span class="p">)</span><span class="o">*</span><span class="n">arr</span><span class="o">+</span><span class="n">vmin</span>
+    <span class="k">return</span> <span class="n">arrout</span></div>
+   
+<div class="viewcode-block" id="Sobol"><a class="viewcode-back" href="../../pars.html#pyfuse.Sobol">[docs]</a><span class="k">def</span> <span class="nf">Sobol</span><span class="p">(</span><span class="n">ParsIn</span><span class="p">,</span><span class="n">nruns</span><span class="p">,</span><span class="n">seed</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Return a sobol sampling of the parameter space; Sobol is always performed on the entire</span>
+<span class="sd">    set of parameters used in the analysis.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ------------    </span>
+<span class="sd">    ParsIn: list of ModPar instances</span>
+<span class="sd">        List with all the parameters to sample from</span>
+<span class="sd">    nruns: int</span>
+<span class="sd">        number of samples</span>
+<span class="sd">    seed: int</span>
+<span class="sd">        seed to start from, change this when performing multiple samples or to make sure</span>
+<span class="sd">        the values are continued by using the last seed</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    --------</span>
+<span class="sd">    Pars: narray </span>
+<span class="sd">        2D array with the rows the different runs and the pars in the columns</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">ndim</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">ParsIn</span><span class="p">)</span>
+    <span class="n">Pars</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nruns</span><span class="p">,</span><span class="n">ndim</span><span class="p">))</span>
+    
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">nruns</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>        
+        <span class="p">[</span><span class="n">r</span><span class="p">,</span> <span class="n">seed_out</span><span class="p">]</span> <span class="o">=</span> <span class="n">i4_sobol</span><span class="p">(</span><span class="n">ndim</span><span class="p">,</span> <span class="n">seed</span><span class="p">)</span>
+        <span class="n">Pars</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">,:]</span><span class="o">=</span><span class="n">r</span>        
+        <span class="n">seed</span> <span class="o">=</span> <span class="n">seed_out</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ndim</span><span class="p">):</span>
+        <span class="n">Pars</span><span class="p">[:,</span><span class="n">i</span><span class="p">]</span><span class="o">=</span><span class="n">reScale</span><span class="p">(</span><span class="n">Pars</span><span class="p">[:,</span><span class="n">i</span><span class="p">],</span><span class="n">ParsIn</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">,</span><span class="n">ParsIn</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">)</span>
+    <span class="k">print</span> <span class="s1">&#39;The seed to continue this sampling is&#39;</span><span class="p">,</span><span class="n">seed</span>
+        
+    <span class="k">return</span> <span class="n">Pars</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2012, S. Van Hoey.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

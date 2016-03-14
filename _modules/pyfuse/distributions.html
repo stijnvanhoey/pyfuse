@@ -1,0 +1,517 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pyfuse.distributions &mdash; pyfuse 1.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="pyfuse 1.0.1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for pyfuse.distributions</h1><div class="highlight"><pre>
+<span></span><span class="c1">##########################################################################</span>
+<span class="c1">## PROBABILITY DISTRIBUTIONS                                            ##</span>
+<span class="c1">##########################################################################</span>
+
+<span class="c1">#Import general packages</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">scipy</span> <span class="kn">as</span> <span class="nn">sp</span>
+<span class="c1">#import random as rd</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+
+
+<span class="c1">##import scikits.timeseries as ts</span>
+<span class="c1">##import scikits.timeseries.lib.plotlib as tpl</span>
+
+<span class="c1">#Import framework packages</span>
+<span class="c1">##from FDC import *               #SVH-package</span>
+<span class="c1">##from CRVC import *              #SVH-package</span>
+<span class="c1">##from plot_functies import *     #SVH-package</span>
+<span class="c1">##from obj_functies import *	    #SVH-package</span>
+
+
+<span class="k">def</span> <span class="nf">NormalizePDF</span><span class="p">(</span><span class="n">Input</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Sum of all elements becomes 1</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">Normed</span><span class="o">=</span><span class="n">Input</span><span class="o">/</span><span class="n">Input</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">Normed</span>
+
+<span class="k">def</span> <span class="nf">Normalize</span><span class="p">(</span><span class="n">Input</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Normalization, values recalculated between 0 and 1</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">Normed</span><span class="o">=</span><span class="p">(</span><span class="n">Input</span><span class="o">-</span><span class="nb">min</span><span class="p">(</span><span class="n">Input</span><span class="p">))</span><span class="o">/</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">Input</span><span class="p">)</span><span class="o">-</span><span class="nb">min</span><span class="p">(</span><span class="n">Input</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">Normed</span>
+
+<span class="c1">#########################################################################</span>
+<span class="c1"># PDF   Get probability value for a certain input!                     ##</span>
+<span class="c1">#########################################################################</span>
+
+<span class="k">def</span> <span class="nf">UniformDistribution</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">left</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span><span class="n">right</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span><span class="n">val</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Probability is 1. when in the region</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="n">left</span><span class="o">&lt;=</span><span class="n">x</span><span class="o">&lt;=</span><span class="n">right</span><span class="p">:</span>
+        <span class="n">px</span><span class="o">=</span><span class="n">val</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">px</span><span class="o">=</span><span class="mf">0.0</span>
+    <span class="k">return</span> <span class="n">px</span>
+
+<span class="k">def</span> <span class="nf">TriangularDistribution</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">left</span><span class="p">,</span><span class="n">mode</span><span class="p">,</span><span class="n">right</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Calculates the &quot;weight factor&quot; of triangular, based on a certain inputvalue</span>
+
+<span class="sd">    see numpy manual (or Beven_book: left=0, right=1)</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="n">mode</span><span class="o">&gt;</span><span class="n">right</span><span class="p">:</span>
+        <span class="k">print</span> <span class="s1">&#39;right en mode zijn omgewisseld!!&#39;</span>
+    <span class="k">if</span> <span class="n">left</span><span class="o">&lt;=</span><span class="n">x</span><span class="o">&lt;=</span><span class="n">mode</span><span class="p">:</span>
+        <span class="n">px</span><span class="o">=</span><span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">left</span><span class="p">)</span><span class="o">/</span><span class="p">((</span><span class="n">right</span><span class="o">-</span><span class="n">left</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">mode</span><span class="o">-</span><span class="n">left</span><span class="p">))</span>
+    <span class="k">elif</span> <span class="n">mode</span><span class="o">&lt;=</span><span class="n">x</span><span class="o">&lt;=</span><span class="n">right</span><span class="p">:</span>
+        <span class="n">px</span><span class="o">=</span><span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">right</span><span class="o">-</span><span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="p">((</span><span class="n">right</span><span class="o">-</span><span class="n">left</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">right</span><span class="o">-</span><span class="n">mode</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">px</span><span class="o">=</span><span class="mf">0.0</span>
+    <span class="k">return</span> <span class="n">px</span>
+
+<span class="k">def</span> <span class="nf">TrapezoidalDistribution</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">left</span><span class="p">,</span><span class="n">mode1</span><span class="p">,</span><span class="n">mode2</span><span class="p">,</span><span class="n">right</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Calculates the &quot;weight factor&quot; of trapezoidal</span>
+<span class="sd">     based on a certain inputvalue</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="n">mode1</span><span class="o">&gt;</span><span class="n">right</span><span class="p">:</span>
+        <span class="k">print</span> <span class="s1">&#39;right en mode1 zijn omgewisseld!!&#39;</span>
+    <span class="k">if</span> <span class="n">mode2</span><span class="o">&gt;</span><span class="n">right</span><span class="p">:</span>
+        <span class="k">print</span> <span class="s1">&#39;right en mode2 zijn omgewisseld!!&#39;</span>
+    <span class="k">if</span> <span class="n">mode1</span><span class="o">&gt;</span><span class="n">mode2</span><span class="p">:</span>
+        <span class="k">print</span> <span class="s1">&#39;mode1 en mode2 zijn omgewisseld!!&#39;</span>
+
+    <span class="n">u</span><span class="o">=</span><span class="mi">2</span><span class="o">/</span><span class="p">(</span><span class="n">right</span><span class="o">+</span><span class="n">mode2</span><span class="o">-</span><span class="n">mode1</span><span class="o">-</span><span class="n">left</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">left</span><span class="o">&lt;=</span><span class="n">x</span><span class="o">&lt;=</span><span class="n">mode1</span><span class="p">:</span>
+        <span class="n">px</span><span class="o">=</span><span class="n">u</span><span class="o">*</span><span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">left</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">mode1</span><span class="o">-</span><span class="n">left</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">mode1</span><span class="o">&lt;=</span><span class="n">x</span><span class="o">&lt;=</span><span class="n">mode2</span><span class="p">:</span>
+        <span class="n">px</span><span class="o">=</span><span class="n">u</span>
+    <span class="k">elif</span> <span class="n">mode2</span><span class="o">&lt;=</span><span class="n">x</span><span class="o">&lt;=</span><span class="n">right</span><span class="p">:</span>
+        <span class="n">px</span><span class="o">=</span><span class="n">u</span><span class="o">*</span><span class="p">(</span><span class="n">right</span><span class="o">-</span><span class="n">x</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">right</span><span class="o">-</span><span class="n">mode2</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">px</span><span class="o">=</span><span class="mf">0.0</span>
+    <span class="k">return</span> <span class="n">px</span>
+
+<span class="k">def</span> <span class="nf">NormalDistribution</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">mu</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">wholePDF</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span><span class="n">left</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">right</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">wholePDF</span> <span class="o">==</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="n">px</span><span class="o">=</span><span class="mi">1</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">mu</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">sigma</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span> <span class="o">/</span><span class="p">(</span><span class="n">sigma</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>           <span class="c1">#cut boundaries to use it as membership function</span>
+        <span class="k">if</span> <span class="n">left</span><span class="o">&lt;=</span><span class="n">x</span><span class="o">&lt;=</span><span class="n">right</span><span class="p">:</span>
+            <span class="n">px</span><span class="o">=</span><span class="mi">1</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">mu</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">sigma</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span> <span class="o">/</span><span class="p">(</span><span class="n">sigma</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">px</span><span class="o">=</span><span class="mf">0.0</span>
+    <span class="k">return</span> <span class="n">px</span>
+
+<span class="k">def</span> <span class="nf">LogNormalDistribution</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">mu</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">wholePDF</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span><span class="n">left</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span><span class="n">right</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">wholePDF</span> <span class="o">==</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="n">px</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">-</span> <span class="n">mu</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">sigma</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span><span class="o">/</span><span class="p">(</span><span class="n">x</span> <span class="o">*</span> <span class="n">sigma</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">left</span><span class="o">&lt;=</span><span class="n">x</span><span class="o">&lt;=</span><span class="n">right</span><span class="p">:</span>
+            <span class="n">px</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">-</span> <span class="n">mu</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">sigma</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span><span class="o">/</span><span class="p">(</span><span class="n">x</span> <span class="o">*</span> <span class="n">sigma</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">px</span><span class="o">=</span><span class="mf">0.0</span>
+    <span class="k">return</span> <span class="n">px</span>
+
+<span class="c1">##########################################################################</span>
+<span class="c1">##RANDOM SAMPLING                                                       ##</span>
+<span class="c1">##########################################################################</span>
+
+<span class="c1">#Uniform</span>
+<div class="viewcode-block" id="randomUniform"><a class="viewcode-back" href="../../distro.html#pyfuse.randomUniform">[docs]</a><span class="k">def</span> <span class="nf">randomUniform</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span><span class="n">right</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span><span class="n">rnsize</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    link to uniform sampling of numpy, to remain consistency in names</span>
+<span class="sd">    of the pyFUSE module</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    left: float</span>
+<span class="sd">        lower value</span>
+<span class="sd">    right: float</span>
+<span class="sd">        upper value</span>
+<span class="sd">    rnsize: int</span>
+<span class="sd">        number of samples</span>
+<span class="sd">    </span>
+<span class="sd">    See Also</span>
+<span class="sd">    ---------</span>
+<span class="sd">    numpy.random.uniform</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">rn</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">left</span><span class="p">,</span><span class="n">right</span><span class="p">,</span><span class="n">rnsize</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">rn</span></div>
+
+<span class="c1">#triangular</span>
+<div class="viewcode-block" id="randomTriangular"><a class="viewcode-back" href="../../distro.html#pyfuse.randomTriangular">[docs]</a><span class="k">def</span> <span class="nf">randomTriangular</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">rnsize</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    link to triangular sampling of numpy, to remain consistency in names</span>
+<span class="sd">    of the pyFUSE module</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    left: float</span>
+<span class="sd">        lower value</span>
+<span class="sd">    mode: float</span>
+<span class="sd">        value between left and right, highest probability</span>
+<span class="sd">    right: float</span>
+<span class="sd">        upper value</span>
+<span class="sd">    rnsize: int</span>
+<span class="sd">        number of samples    </span>
+<span class="sd">    </span>
+<span class="sd">    See Also</span>
+<span class="sd">    ---------</span>
+<span class="sd">    numpy.random.triangular</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    
+    <span class="k">if</span> <span class="n">mode</span><span class="o">==</span><span class="bp">None</span><span class="p">:</span>
+        <span class="k">print</span> <span class="s1">&#39;Triangular needs mode-value&#39;</span>
+    <span class="n">rn</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">triangular</span><span class="p">(</span><span class="n">left</span><span class="p">,</span> <span class="n">mode</span><span class="p">,</span> <span class="n">right</span><span class="p">,</span> <span class="n">rnsize</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">rn</span></div>
+
+<span class="c1">#trapezoidal</span>
+<div class="viewcode-block" id="randomTrapezoidal"><a class="viewcode-back" href="../../distro.html#pyfuse.randomTrapezoidal">[docs]</a><span class="k">def</span> <span class="nf">randomTrapezoidal</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span><span class="n">mode1</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">mode2</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span><span class="n">right</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span><span class="n">rnsize</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    random sampling from trapezoidal function</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    left: float</span>
+<span class="sd">        lower value</span>
+<span class="sd">    mode1: float</span>
+<span class="sd">        value between left and right, highest probability left side</span>
+<span class="sd">    mode2: float</span>
+<span class="sd">        value between left and right, highest probability right side</span>
+<span class="sd">    right: float</span>
+<span class="sd">        upper value</span>
+<span class="sd">    rnsize: int</span>
+<span class="sd">        number of samples</span>
+<span class="sd">    </span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="n">mode1</span><span class="o">==</span><span class="bp">None</span><span class="p">:</span>
+        <span class="k">print</span> <span class="s1">&#39;Triangular needs 2 mode-values&#39;</span>
+    <span class="k">if</span> <span class="n">mode1</span><span class="o">==</span><span class="bp">None</span><span class="p">:</span>
+        <span class="k">print</span> <span class="s1">&#39;Triangular needs 2 mode-values&#39;</span>
+
+    <span class="n">rn</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">rnsize</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">rn</span><span class="p">)):</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span><span class="mf">1.0</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">h</span><span class="o">=</span><span class="mi">2</span><span class="o">/</span><span class="p">(</span><span class="n">right</span><span class="o">+</span><span class="n">mode2</span><span class="o">-</span><span class="n">mode1</span><span class="o">-</span><span class="n">left</span><span class="p">)</span>
+
+        <span class="n">a</span><span class="o">=</span><span class="n">left</span>
+        <span class="n">b</span><span class="o">=</span><span class="n">right</span>
+        <span class="n">c</span><span class="o">=</span><span class="n">mode1</span>
+        <span class="n">d</span><span class="o">=</span><span class="n">mode2</span>
+
+        <span class="k">if</span> <span class="mf">0.0</span><span class="o">&lt;=</span><span class="n">y</span><span class="o">&lt;=</span><span class="p">(</span><span class="n">h</span><span class="o">*</span><span class="p">(</span><span class="n">c</span><span class="o">-</span><span class="n">a</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">):</span>
+            <span class="n">rn</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">=</span><span class="n">a</span><span class="o">+</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">c</span><span class="o">-</span><span class="n">a</span><span class="p">)</span><span class="o">/</span><span class="n">h</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">h</span><span class="o">*</span><span class="p">(</span><span class="n">c</span><span class="o">-</span><span class="n">a</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span><span class="o">&lt;=</span><span class="n">y</span><span class="o">&lt;=</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">h</span><span class="o">*</span><span class="p">(</span><span class="n">b</span><span class="o">-</span><span class="n">d</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">):</span>
+            <span class="n">rn</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">=</span><span class="p">(</span><span class="n">a</span><span class="o">+</span><span class="n">c</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span> <span class="o">+</span> <span class="n">y</span><span class="o">/</span><span class="n">h</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">h</span><span class="o">*</span><span class="p">(</span><span class="n">b</span><span class="o">-</span><span class="n">d</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span><span class="o">&lt;=</span><span class="n">y</span><span class="o">&lt;=</span><span class="mf">1.0</span><span class="p">:</span>
+            <span class="n">rn</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">=</span><span class="n">b</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">b</span><span class="o">-</span><span class="n">d</span><span class="p">)</span><span class="o">/</span><span class="n">h</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">y</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">print</span> <span class="s1">&#39;not in correct range&#39;</span>
+    <span class="k">return</span> <span class="n">rn</span></div>
+
+<span class="c1">#Normal</span>
+<div class="viewcode-block" id="randomNormal"><a class="viewcode-back" href="../../distro.html#pyfuse.randomNormal">[docs]</a><span class="k">def</span> <span class="nf">randomNormal</span><span class="p">(</span><span class="n">mu</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">rnsize</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    link to sampling of normal distribution of numpy, to remain consistency in names</span>
+<span class="sd">    of the pyFUSE module</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    mu: float</span>
+<span class="sd">        mean value </span>
+<span class="sd">    sigma: float</span>
+<span class="sd">        Standard deviation (spread or &#39;width&#39;) of the distribution</span>
+<span class="sd">    rnsize: int</span>
+<span class="sd">        number of samples</span>
+<span class="sd">    </span>
+<span class="sd">    See Also</span>
+<span class="sd">    ---------</span>
+<span class="sd">    numpy.random.normal</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    
+    <span class="n">rn</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">rnsize</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">rn</span></div>
+
+<span class="c1">#lognormal</span>
+<div class="viewcode-block" id="randomLogNormal"><a class="viewcode-back" href="../../distro.html#pyfuse.randomLogNormal">[docs]</a><span class="k">def</span> <span class="nf">randomLogNormal</span><span class="p">(</span><span class="n">mu</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">rnsize</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    link to sampling of lognormal distribution of numpy, to remain consistency in names</span>
+<span class="sd">    of the pyFUSE module</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    mu: float</span>
+<span class="sd">        Mean value of the underlying normal distribution </span>
+<span class="sd">    sigma: float</span>
+<span class="sd">        Standard deviation of the underlying normal distribution</span>
+<span class="sd">    rnsize: int</span>
+<span class="sd">        number of samples</span>
+<span class="sd">    </span>
+<span class="sd">    See Also</span>
+<span class="sd">    ---------</span>
+<span class="sd">    numpy.random.lognormal</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    
+    <span class="n">rn</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">lognormal</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">rnsize</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">rn</span></div>
+
+<span class="c1">#distribution selector</span>
+<span class="k">def</span> <span class="nf">DistSelector</span><span class="p">(</span><span class="n">args</span><span class="p">,</span><span class="n">distname</span><span class="o">=</span><span class="s1">&#39;randomUniform&#39;</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">distname</span> <span class="o">==</span><span class="s1">&#39;randomUniform&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">randomUniform</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">right</span><span class="o">=</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">rnsize</span><span class="o">=</span><span class="n">args</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+    <span class="k">elif</span> <span class="n">distname</span> <span class="o">==</span><span class="s1">&#39;randomTriangular&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">randomTriangular</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">mode</span><span class="o">=</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">right</span><span class="o">=</span><span class="n">args</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">rnsize</span><span class="o">=</span><span class="n">args</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+    <span class="k">elif</span> <span class="n">distname</span> <span class="o">==</span><span class="s1">&#39;randomTrapezoidal&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">randomTrapezoidal</span><span class="p">(</span><span class="n">left</span><span class="o">=</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">mode1</span><span class="o">=</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">mode2</span><span class="o">=</span><span class="n">args</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span><span class="n">right</span><span class="o">=</span><span class="n">args</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span><span class="n">rnsize</span><span class="o">=</span><span class="n">args</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span>
+    <span class="k">elif</span> <span class="n">distname</span> <span class="o">==</span><span class="s1">&#39;randomNormal&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">randomNormal</span><span class="p">(</span><span class="n">mu</span><span class="o">=</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">sigma</span><span class="o">=</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">rnsize</span><span class="o">=</span><span class="n">args</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+    <span class="k">elif</span> <span class="n">distname</span> <span class="o">==</span><span class="s1">&#39;randomLogNormal&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">randomLogNormal</span><span class="p">(</span><span class="n">mu</span><span class="o">=</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">sigma</span><span class="o">=</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">rnsize</span><span class="o">=</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;Wrong ditribution name; choose from: randomUniform, randomTriangular, randomTrapezoidal, randomNormal, randomLogNormal&#39;</span><span class="p">)</span>
+
+<span class="c1">##########################################################################</span>
+<span class="c1">##INVERSE DISTRIBUTIONS (from uniform to other distributions sampling)  ##</span>
+<span class="c1">##########################################################################</span>
+
+<span class="k">def</span> <span class="nf">stnorm2norm</span><span class="p">(</span><span class="n">stn</span><span class="p">,</span><span class="n">mu</span><span class="p">,</span><span class="n">sigma</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">sigma</span><span class="o">*</span><span class="n">stn</span> <span class="o">+</span> <span class="n">mu</span>
+
+<span class="k">def</span> <span class="nf">ltqnorm</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Modified from the author&#39;s original perl code (original comments follow below)</span>
+<span class="sd">    by dfield@yahoo-inc.com.  May 3, 2004.</span>
+
+<span class="sd">    Lower tail quantile for standard normal distribution function.</span>
+
+<span class="sd">    This function returns an approximation of the inverse cumulative</span>
+<span class="sd">    standard normal distribution function.  I.e., given P, it returns</span>
+<span class="sd">    an approximation to the X satisfying P = Pr{Z &lt;= X} where Z is a</span>
+<span class="sd">    random variable from the standard normal distribution.</span>
+
+<span class="sd">    The algorithm uses a minimax approximation by rational functions</span>
+<span class="sd">    and the result has a relative error whose absolute value is less</span>
+<span class="sd">    than 1.15e-9.</span>
+
+<span class="sd">    Author:      Peter John Acklam</span>
+<span class="sd">    Time-stamp:  2000-07-19 18:26:14</span>
+<span class="sd">    E-mail:      pjacklam@online.no</span>
+<span class="sd">    WWW URL:     http://home.online.no/~pjacklam</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">p</span> <span class="o">&lt;=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">p</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="c1"># The original perl code exits here, we&#39;ll throw an exception instead</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span> <span class="s2">&quot;Argument to ltqnorm </span><span class="si">%f</span><span class="s2"> must be in open interval (0,1)&quot;</span> <span class="o">%</span> <span class="n">p</span> <span class="p">)</span>
+
+    <span class="c1"># Coefficients in rational approximations.</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mf">3.969683028665376e+01</span><span class="p">,</span>  <span class="mf">2.209460984245205e+02</span><span class="p">,</span> \
+         <span class="o">-</span><span class="mf">2.759285104469687e+02</span><span class="p">,</span>  <span class="mf">1.383577518672690e+02</span><span class="p">,</span> \
+         <span class="o">-</span><span class="mf">3.066479806614716e+01</span><span class="p">,</span>  <span class="mf">2.506628277459239e+00</span><span class="p">)</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mf">5.447609879822406e+01</span><span class="p">,</span>  <span class="mf">1.615858368580409e+02</span><span class="p">,</span> \
+         <span class="o">-</span><span class="mf">1.556989798598866e+02</span><span class="p">,</span>  <span class="mf">6.680131188771972e+01</span><span class="p">,</span> \
+         <span class="o">-</span><span class="mf">1.328068155288572e+01</span> <span class="p">)</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mf">7.784894002430293e-03</span><span class="p">,</span> <span class="o">-</span><span class="mf">3.223964580411365e-01</span><span class="p">,</span> \
+         <span class="o">-</span><span class="mf">2.400758277161838e+00</span><span class="p">,</span> <span class="o">-</span><span class="mf">2.549732539343734e+00</span><span class="p">,</span> \
+          <span class="mf">4.374664141464968e+00</span><span class="p">,</span>  <span class="mf">2.938163982698783e+00</span><span class="p">)</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="p">(</span> <span class="mf">7.784695709041462e-03</span><span class="p">,</span>  <span class="mf">3.224671290700398e-01</span><span class="p">,</span> \
+          <span class="mf">2.445134137142996e+00</span><span class="p">,</span>  <span class="mf">3.754408661907416e+00</span><span class="p">)</span>
+
+    <span class="c1"># Define break-points.</span>
+    <span class="n">plow</span>  <span class="o">=</span> <span class="mf">0.02425</span>
+    <span class="n">phigh</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">plow</span>
+
+    <span class="c1"># Rational approximation for lower region:</span>
+    <span class="k">if</span> <span class="n">p</span> <span class="o">&lt;</span> <span class="n">plow</span><span class="p">:</span>
+       <span class="n">q</span>  <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">p</span><span class="p">))</span>
+       <span class="k">return</span> <span class="p">(((((</span><span class="n">c</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">q</span><span class="o">+</span><span class="n">c</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">*</span><span class="n">q</span><span class="o">+</span><span class="n">c</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span><span class="o">*</span><span class="n">q</span><span class="o">+</span><span class="n">c</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span><span class="o">*</span><span class="n">q</span><span class="o">+</span><span class="n">c</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span><span class="o">*</span><span class="n">q</span><span class="o">+</span><span class="n">c</span><span class="p">[</span><span class="mi">5</span><span class="p">])</span> <span class="o">/</span> \
+               <span class="p">((((</span><span class="n">d</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">q</span><span class="o">+</span><span class="n">d</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">*</span><span class="n">q</span><span class="o">+</span><span class="n">d</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span><span class="o">*</span><span class="n">q</span><span class="o">+</span><span class="n">d</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span><span class="o">*</span><span class="n">q</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="c1"># Rational approximation for upper region:</span>
+    <span class="k">if</span> <span class="n">phigh</span> <span class="o">&lt;</span> <span class="n">p</span><span class="p">:</span>
+       <span class="n">q</span>  <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">p</span><span class="p">))</span>
+       <span class="k">return</span> <span class="o">-</span><span class="p">(((((</span><span class="n">c</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">q</span><span class="o">+</span><span class="n">c</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">*</span><span class="n">q</span><span class="o">+</span><span class="n">c</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span><span class="o">*</span><span class="n">q</span><span class="o">+</span><span class="n">c</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span><span class="o">*</span><span class="n">q</span><span class="o">+</span><span class="n">c</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span><span class="o">*</span><span class="n">q</span><span class="o">+</span><span class="n">c</span><span class="p">[</span><span class="mi">5</span><span class="p">])</span> <span class="o">/</span> \
+                <span class="p">((((</span><span class="n">d</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">q</span><span class="o">+</span><span class="n">d</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">*</span><span class="n">q</span><span class="o">+</span><span class="n">d</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span><span class="o">*</span><span class="n">q</span><span class="o">+</span><span class="n">d</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span><span class="o">*</span><span class="n">q</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="c1"># Rational approximation for central region:</span>
+    <span class="n">q</span> <span class="o">=</span> <span class="n">p</span> <span class="o">-</span> <span class="mf">0.5</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">q</span><span class="o">*</span><span class="n">q</span>
+    <span class="k">return</span> <span class="p">(((((</span><span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">r</span><span class="o">+</span><span class="n">a</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">*</span><span class="n">r</span><span class="o">+</span><span class="n">a</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span><span class="o">*</span><span class="n">r</span><span class="o">+</span><span class="n">a</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span><span class="o">*</span><span class="n">r</span><span class="o">+</span><span class="n">a</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span><span class="o">*</span><span class="n">r</span><span class="o">+</span><span class="n">a</span><span class="p">[</span><span class="mi">5</span><span class="p">])</span><span class="o">*</span><span class="n">q</span> <span class="o">/</span> \
+           <span class="p">(((((</span><span class="n">b</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">r</span><span class="o">+</span><span class="n">b</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">*</span><span class="n">r</span><span class="o">+</span><span class="n">b</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span><span class="o">*</span><span class="n">r</span><span class="o">+</span><span class="n">b</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span><span class="o">*</span><span class="n">r</span><span class="o">+</span><span class="n">b</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span><span class="o">*</span><span class="n">r</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">ltqnormarr</span><span class="p">(</span><span class="n">parr</span><span class="p">,</span><span class="n">mu</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span><span class="n">sigma</span><span class="o">=</span><span class="mf">1.</span><span class="p">):</span>
+    <span class="n">stnorm</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">ltqnorm</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">parr</span><span class="p">])</span>
+    <span class="k">print</span> <span class="nb">type</span><span class="p">(</span><span class="n">stnorm</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">stnorm2norm</span><span class="p">(</span><span class="n">stnorm</span><span class="p">,</span><span class="n">mu</span><span class="p">,</span><span class="n">sigma</span><span class="p">)</span>
+    
+    
+
+<span class="c1">##########################################################################</span>
+<span class="c1">##TESTFIGUREN ETC                                                       ##</span>
+<span class="c1">##########################################################################</span>
+
+<span class="c1">#TEST</span>
+<span class="c1">##import re</span>
+<span class="c1">##plt.figure()</span>
+<span class="c1">##trg=&#39;UniformDistribution&#39;</span>
+<span class="c1">##x=np.arange(-3.0,3.0,0.01)</span>
+<span class="c1">##y=np.zeros(np.size(x))</span>
+<span class="c1">##for i in range(np.size(x)):</span>
+<span class="c1">##    #y[i]= TriangularDistribution(x[i],0.0,0.4,1.0)</span>
+<span class="c1">##    #y[i]= UniformDistribution(x[i])</span>
+<span class="c1">##    y[i]= eval(trg+&#39;(x[i])&#39;)</span>
+<span class="c1">##    #y[i]= NormalDistribution(x[i],wholePDF=True)</span>
+<span class="c1">##    #y[i]= LogNormalDistribution(x[i],mu=0.5, sigma=1.0, wholePDF=False,right=2.8)</span>
+<span class="c1">##ynorm=Normalize(y)</span>
+<span class="c1">##plt.plot(x,ynorm,&#39;ro&#39;)</span>
+<span class="c1">##plt.show()</span>
+<span class="c1">##plt.plot(x,y,&#39;ro&#39;)</span>
+<span class="c1">###plt.savefig(&#39;uniformmake.png&#39;, dpi=300, facecolor=&#39;w&#39;, edgecolor=&#39;w&#39;,orientation=&#39;portrait&#39;, papertype=None,transparent=False,bbox_inches=&#39;tight&#39;)</span>
+<span class="c1">##plt.savefig(&#39;lognormalmake.png&#39;, dpi=300, facecolor=&#39;w&#39;, edgecolor=&#39;w&#39;,orientation=&#39;portrait&#39;, papertype=None,transparent=False,bbox_inches=&#39;tight&#39;)</span>
+
+
+
+<span class="c1">##plt.figure()</span>
+<span class="c1">##x=np.arange(-1.0,1.0,0.01)</span>
+<span class="c1">##y=np.zeros(np.size(x))</span>
+<span class="c1">##for i in range(np.size(x)):</span>
+<span class="c1">##    y[i]= TriangularDistribution(x[i],-1.0,0.0,1.0)</span>
+<span class="c1">##    #y[i]= UniformDistribution(x[i])</span>
+<span class="c1">##    #y[i]= NormalDistribution(x[i],wholePDF=True)</span>
+<span class="c1">##    #y[i]= LogNormalDistribution(x[i],mu=0.0, sigma=1.0, wholePDF=False,right=2.8)</span>
+<span class="c1">##ynorm=Normalize(y)</span>
+<span class="c1">###plt.plot(x,ynorm,&#39;ro&#39;)</span>
+<span class="c1">###y2=randomLogNormal(mu=0.0, sigma=1.0, rnsize=100000)</span>
+<span class="c1">##y2=randomTriangular(left=-1.0, mode=0.0, right=1.0, rnsize=10000)</span>
+<span class="c1">##plt.hist(y2, bins=200,normed=True, cumulative=False,color=&#39;b&#39;, edgecolor=&#39;b&#39;)</span>
+<span class="c1">##plt.plot(x,y,&#39;ro&#39;)</span>
+<span class="c1">###plt.axis([-3, 3, 0, 1])</span>
+<span class="c1">##plt.show()</span>
+
+<span class="c1">##plt.figure()</span>
+<span class="c1">##s = randomUniform(0.0,1.0,100000)</span>
+<span class="c1">##count, bins, ignored = plt.hist(s, 200, normed=True)</span>
+<span class="c1">##plt.plot(bins, np.ones_like(bins), linewidth=2, color=&#39;r&#39;)</span>
+<span class="c1">##</span>
+<span class="c1">##testnr=[1000000,100000,10000,1000,100,10]</span>
+<span class="c1">##npt=[1,2,3,4,5,6]</span>
+<span class="c1">##colors=[&#39;k&#39;,&#39;b&#39;,&#39;y&#39;,&#39;m&#39;,&#39;c&#39;,&#39;g&#39;]</span>
+<span class="c1">##</span>
+<span class="c1">##plt.figure()</span>
+<span class="c1">##tg=0</span>
+<span class="c1">##for i in testnr:</span>
+<span class="c1">##    plt.subplot(3,2,npt[tg])</span>
+<span class="c1">##    y=randomtrapezoidal(0.0,0.2,0.5,1.0,i)</span>
+<span class="c1">##    h = plt.hist(y, bins=200,normed=True, cumulative=False,color=colors[tg], edgecolor=colors[tg])</span>
+<span class="c1">##    plt.title(str(i)+ &#39; samples&#39;)</span>
+<span class="c1">##    setp(gca(), xticklabels=[])</span>
+<span class="c1">##    setp(gca(), yticklabels=[])</span>
+<span class="c1">##    x=np.arange(0.0,1.0,0.0001)</span>
+<span class="c1">##    y=np.zeros(np.size(x))</span>
+<span class="c1">##    for i in range(np.size(x)):</span>
+<span class="c1">##        y[i]= TrapezoidalDistribution(x[i],0.0,0.2,0.5,1.0)</span>
+<span class="c1">##    plt.plot(x,y,&#39;r&#39;)</span>
+<span class="c1">##    setp(gca(), xticklabels=[])</span>
+<span class="c1">##    setp(gca(), yticklabels=[])</span>
+<span class="c1">##</span>
+<span class="c1">##    tg=tg+1</span>
+<span class="c1">##</span>
+<span class="c1">##plt.savefig(&#39;nrMCTrap.png&#39;, dpi=300, facecolor=&#39;w&#39;, edgecolor=&#39;w&#39;,orientation=&#39;portrait&#39;, papertype=None,transparent=False,bbox_inches=&#39;tight&#39;)</span>
+<span class="c1">##plt.figure()</span>
+<span class="c1">##tg=0</span>
+<span class="c1">##for i in testnr:</span>
+<span class="c1">##    plt.subplot(3,2,npt[tg])</span>
+<span class="c1">##    s = np.random.uniform(0.0,1.0,i)</span>
+<span class="c1">##    count, bins, ignored = plt.hist(s, 200, normed=True, color=colors[tg], edgecolor=colors[tg])</span>
+<span class="c1">##    plt.plot(bins, np.ones_like(bins), linewidth=2)</span>
+<span class="c1">##    plt.title(str(i)+ &#39; samples&#39;)</span>
+<span class="c1">##    setp(gca(), xticklabels=[])</span>
+<span class="c1">##    setp(gca(), yticklabels=[])</span>
+<span class="c1">##    tg=tg+1</span>
+<span class="c1">##</span>
+<span class="c1">##plt.savefig(&#39;nrMCUnif.png&#39;, dpi=300, facecolor=&#39;w&#39;, edgecolor=&#39;w&#39;,orientation=&#39;portrait&#39;, papertype=None,transparent=False,bbox_inches=&#39;tight&#39;)</span>
+
+
+
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2012, S. Van Hoey.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

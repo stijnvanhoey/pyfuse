@@ -1,0 +1,309 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pyfuse.infodicts &mdash; pyfuse 1.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="pyfuse 1.0.1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for pyfuse.infodicts</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on Wed Oct 10 16:48:33 2012</span>
+
+<span class="sd">@author: VHOEYS</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">pprint</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+
+<span class="c1">##############################################################################</span>
+<span class="c1">###   DICTIONARY FOR INFORMATION ABOUT MODEL FRAMEWORK OF ALL VARS,PARS,...</span>
+<span class="c1">###############################################################################</span>
+
+<div class="viewcode-block" id="all_options"><a class="viewcode-back" href="../../info.html#pyfuse.all_options">[docs]</a><span class="k">def</span> <span class="nf">all_options</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns a print out of all possible fluxes of all model combinations possible to select</span>
+<span class="sd">    </span>
+<span class="sd">    (1) upper-layer architecture</span>
+<span class="sd">    </span>
+<span class="sd">        tension1_1:</span>
+<span class="sd">            upper layer broken up into tension and free storage</span>
+<span class="sd">        tension2_1:</span>
+<span class="sd">            tension storage sub-divided into recharge and excess</span>
+<span class="sd">        onestate_1:</span>
+<span class="sd">            upper layer defined by a single state variable</span>
+<span class="sd">        surface1_1:</span>
+<span class="sd">            upper layer defined by a surface storage representing and a tension reservoir</span>
+<span class="sd">        </span>
+
+<span class="sd">    (2) lower-layer architecture and baseflow</span>
+<span class="sd">    </span>
+<span class="sd">        tens2pll_2:</span>
+<span class="sd">            tension reservoir plus two parallel tanks</span>
+<span class="sd">        unlimfrc_2:</span>
+<span class="sd">            baseflow resvr of unlimited size (0-HUGE), frac rate</span>
+<span class="sd">        unlimpow_2:</span>
+<span class="sd">            baseflow resvr of unlimited size (0-HUGE), power recession</span>
+<span class="sd">        fixedsiz_2:</span>
+<span class="sd">            baseflow reservoir of fixed size</span>
+
+<span class="sd">    (3) surface runoff</span>
+<span class="sd">    </span>
+<span class="sd">        arno_x_vic:</span>
+<span class="sd">            ARNO/Xzang/VIC parameterization (upper zone control)</span>
+<span class="sd">        prms_varnt:</span>
+<span class="sd">            PRMS variant (fraction of upper tension storage)</span>
+<span class="sd">        tmdl_param:</span>
+<span class="sd">            TOPMODEL parameterization (only valid for TOPMODEL qb)</span>
+<span class="sd">        oflwtresh:</span>
+<span class="sd">            threshold based overland flow generation</span>
+
+<span class="sd">    (4) percolation</span>
+<span class="sd">        </span>
+<span class="sd">        perc_f2sat:</span>
+<span class="sd">            water from (field cap to sat) avail for percolation</span>
+<span class="sd">        perc_w2sat:</span>
+<span class="sd">            water from (wilt pt to sat) avail for percolation</span>
+<span class="sd">        perc_lower:</span>
+<span class="sd">            perc defined by moisture content in lower layer (SAC)</span>
+<span class="sd">        perc_tresh:</span>
+<span class="sd">            threshold based percolation</span>
+<span class="sd">        perc_nodrain:</span>
+<span class="sd">            percolation represents the baseflow routing</span>
+
+<span class="sd">    (5) evaporation</span>
+<span class="sd">    </span>
+<span class="sd">        sequential:</span>
+<span class="sd">            sequential evaporation model</span>
+<span class="sd">        rootweight:</span>
+<span class="sd">            root weighting</span>
+
+<span class="sd">    (6) interflow</span>
+<span class="sd">    </span>
+<span class="sd">        intflwnone:</span>
+<span class="sd">            no interflow</span>
+<span class="sd">        intflwsome:</span>
+<span class="sd">            linear interflow</span>
+<span class="sd">        intflwtresh:</span>
+<span class="sd">            threshold based interflow generation</span>
+<span class="sd">    </span>
+<span class="sd">    (7) time delay in runoff</span>
+<span class="sd">    </span>
+<span class="sd">        rout_all1:</span>
+<span class="sd">            use a Gamma distribution with shape parameter = 2.5 to rout combined flow</span>
+<span class="sd">        no_rout:</span>
+<span class="sd">            no routing</span>
+<span class="sd">        rout_ind:</span>
+<span class="sd">            rout subflows individual    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">All_options</span><span class="o">=</span><span class="p">{}</span>
+<span class="c1">#    All_options[&#39;soilstorage&#39;] = &#39;onelayer&#39;, &#39;twolayer&#39; #AFSCHAFFEN DIE HANDEL =&gt; altijd 2 layers</span>
+    <span class="c1">#idea one layer is an upper layer:</span>
+    <span class="n">All_options</span><span class="p">[</span><span class="s1">&#39;uplayer&#39;</span><span class="p">]</span><span class="o">=</span> <span class="s1">&#39;onestate_1&#39;</span><span class="p">,</span> <span class="s1">&#39;tension1_1&#39;</span><span class="p">,</span><span class="s1">&#39;tension2_1&#39;</span><span class="p">,</span><span class="s1">&#39;easytest&#39;</span><span class="p">,</span><span class="s1">&#39;surface1_1&#39;</span>
+    <span class="n">All_options</span><span class="p">[</span><span class="s1">&#39;lowlayer_baseflow&#39;</span><span class="p">]</span><span class="o">=</span> <span class="s1">&#39;tens2pll_2&#39;</span><span class="p">,</span><span class="s1">&#39;unlimfrc_2&#39;</span><span class="p">,</span><span class="s1">&#39;unlimpow_2&#39;</span><span class="p">,</span><span class="s1">&#39;fixedsiz_2&#39;</span>
+    <span class="n">All_options</span><span class="p">[</span><span class="s1">&#39;surface&#39;</span><span class="p">]</span><span class="o">=</span> <span class="s1">&#39;arno_x_vic&#39;</span><span class="p">,</span><span class="s1">&#39;prms_varnt&#39;</span><span class="p">,</span><span class="s1">&#39;tmdl_param&#39;</span><span class="p">,</span><span class="s1">&#39;testeasy&#39;</span><span class="p">,</span><span class="s1">&#39;oflwtresh&#39;</span> 
+    <span class="n">All_options</span><span class="p">[</span><span class="s1">&#39;percolation&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;perc_f2sat&#39;</span><span class="p">,</span><span class="s1">&#39;perc_w2sat&#39;</span><span class="p">,</span><span class="s1">&#39;perc_lower&#39;</span><span class="p">,</span><span class="s1">&#39;perc_nodrain&#39;</span><span class="p">,</span><span class="s1">&#39;perc_tresh&#39;</span>
+    <span class="n">All_options</span><span class="p">[</span><span class="s1">&#39;evaporation&#39;</span><span class="p">]</span><span class="o">=</span> <span class="s1">&#39;sequential&#39;</span><span class="p">,</span><span class="s1">&#39;rootweight&#39;</span><span class="c1">#, &#39;freefirst&#39;  </span>
+    <span class="n">All_options</span><span class="p">[</span><span class="s1">&#39;interflow&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;intflwnone&#39;</span><span class="p">,</span><span class="s1">&#39;intflwsome&#39;</span><span class="p">,</span><span class="s1">&#39;intflwtresh&#39;</span>    
+    <span class="n">All_options</span><span class="p">[</span><span class="s1">&#39;routing&#39;</span><span class="p">]</span><span class="o">=</span> <span class="s1">&#39;rout_all1&#39;</span><span class="p">,</span><span class="s1">&#39;no_rout&#39;</span><span class="p">,</span><span class="s1">&#39;rout_ind&#39;</span>
+<span class="c1">#    All_options[&#39;reservoirs&#39;]=&#39;Any combination of tree integers (&lt;10) with respectively overland, interflow and base flow: eg 122&#39;</span>
+         
+<span class="c1">#    pprint.pprint(All_options)</span>
+    <span class="k">return</span> <span class="n">All_options</span></div>
+
+<div class="viewcode-block" id="all_states"><a class="viewcode-back" href="../../info.html#pyfuse.all_states">[docs]</a><span class="k">def</span> <span class="nf">all_states</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns a print of all possible states of all model combinations</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">all_states_info</span><span class="o">=</span><span class="p">{}</span>
+    <span class="n">all_states_info</span><span class="p">[</span><span class="s1">&#39;S1&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;Total water content in the upper soil layer&#39;</span>
+    <span class="n">all_states_info</span><span class="p">[</span><span class="s1">&#39;S1T&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;Tension water content in the upper soil layer&#39;</span>
+    <span class="n">all_states_info</span><span class="p">[</span><span class="s1">&#39;S1TA&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;Primary tension water content in the upper soil layer&#39;</span>
+    <span class="n">all_states_info</span><span class="p">[</span><span class="s1">&#39;S1TB&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;Secondary tension water content in the upper soil layer&#39;</span>
+    <span class="n">all_states_info</span><span class="p">[</span><span class="s1">&#39;S1F&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;Free water content in the upper soil layer&#39;</span>
+    
+    <span class="n">all_states_info</span><span class="p">[</span><span class="s1">&#39;S2&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;Total water content in the lower soil layer&#39;</span>
+    <span class="n">all_states_info</span><span class="p">[</span><span class="s1">&#39;S2T&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;Tension water content in the lower soil layer&#39;</span>
+    <span class="n">all_states_info</span><span class="p">[</span><span class="s1">&#39;S2FA&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;Free water content in the primary base flow reservoir&#39;</span>
+    <span class="n">all_states_info</span><span class="p">[</span><span class="s1">&#39;S2FB&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;Free water content in the secondary base flow reservoir&#39;</span>
+    
+    <span class="n">all_states_info</span><span class="p">[</span><span class="s1">&#39;S&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;Total water content in the single soil layer&#39;</span>        
+         
+    <span class="k">return</span> <span class="n">all_states_info</span></div>
+
+<div class="viewcode-block" id="all_fluxes"><a class="viewcode-back" href="../../info.html#pyfuse.all_fluxes">[docs]</a><span class="k">def</span> <span class="nf">all_fluxes</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns a print of  all possible fluxes of all model combinations possible to select</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">all_fluxes_info</span><span class="o">=</span><span class="p">{}</span>
+    <span class="n">all_fluxes_info</span><span class="p">[</span><span class="s1">&#39;rain&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;Precipitation&#39;</span>
+    <span class="n">all_fluxes_info</span><span class="p">[</span><span class="s1">&#39;pet&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;Potential evaporation&#39;</span>
+    <span class="n">all_fluxes_info</span><span class="p">[</span><span class="s1">&#39;e&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;otal evaporation from both soil layers&#39;</span>        
+    <span class="n">all_fluxes_info</span><span class="p">[</span><span class="s1">&#39;e1&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;Evaporation from the upper soil&#39;</span>
+    <span class="n">all_fluxes_info</span><span class="p">[</span><span class="s1">&#39;e2&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;Evaporation from the lower soil&#39;</span>   
+    <span class="n">all_fluxes_info</span><span class="p">[</span><span class="s1">&#39;e1A&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;Evaporation from the primary tension store&#39;</span>
+    <span class="n">all_fluxes_info</span><span class="p">[</span><span class="s1">&#39;e1B&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;Evaporation from the secondary tension store&#39;</span>
+    <span class="n">all_fluxes_info</span><span class="p">[</span><span class="s1">&#39;qsx&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;Surface runoff&#39;</span>  
+    <span class="n">all_fluxes_info</span><span class="p">[</span><span class="s1">&#39;q12&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;Percolation of water from the upper to the lower layer&#39;</span>       <span class="c1">#water from upper to lower storage</span>
+    <span class="n">all_fluxes_info</span><span class="p">[</span><span class="s1">&#39;qif&#39;</span><span class="p">]</span><span class="o">=</span>  <span class="s1">&#39;Interflow&#39;</span>
+    <span class="n">all_fluxes_info</span><span class="p">[</span><span class="s1">&#39;qb&#39;</span><span class="p">]</span><span class="o">=</span> <span class="s1">&#39;Base flow&#39;</span>
+    <span class="n">all_fluxes_info</span><span class="p">[</span><span class="s1">&#39;qbA&#39;</span><span class="p">]</span><span class="o">=</span> <span class="s1">&#39;Base flow from the primary reservoir&#39;</span>
+    <span class="n">all_fluxes_info</span><span class="p">[</span><span class="s1">&#39;qbB&#39;</span><span class="p">]</span><span class="o">=</span> <span class="s1">&#39;Base flow from the secondary reservoir&#39;</span>
+    <span class="n">all_fluxes_info</span><span class="p">[</span><span class="s1">&#39;qurof&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;Overflow of water from the primary tension in the upper soil layer&#39;</span>
+    <span class="n">all_fluxes_info</span><span class="p">[</span><span class="s1">&#39;qutof&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;Overflow of water from tension storage in the upper soil layer&#39;</span>
+    <span class="n">all_fluxes_info</span><span class="p">[</span><span class="s1">&#39;qufof&#39;</span><span class="p">]</span><span class="o">=</span> <span class="s1">&#39;Overflow of water from free storage in the upper soil layer&#39;</span>
+    <span class="n">all_fluxes_info</span><span class="p">[</span><span class="s1">&#39;qstof&#39;</span><span class="p">]</span><span class="o">=</span> <span class="s1">&#39;Overflow of water from tension storage in the lower soil layer&#39;</span>
+    <span class="n">all_fluxes_info</span><span class="p">[</span><span class="s1">&#39;qsfof&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;Overflow of water from free storage in the lower soil layer&#39;</span>
+    <span class="n">all_fluxes_info</span><span class="p">[</span><span class="s1">&#39;qsfofA&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;Overflow of water from primary base flow storage in the lower soil layer&#39;</span>
+    <span class="n">all_fluxes_info</span><span class="p">[</span><span class="s1">&#39;qsfofB&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;Overflow of water from secondary base flow storage in the lower soil layer&#39;</span>
+    <span class="n">all_fluxes_info</span><span class="p">[</span><span class="s1">&#39;routov&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;Overland flow after routing&#39;</span>
+    <span class="n">all_fluxes_info</span><span class="p">[</span><span class="s1">&#39;routif&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;Interflow flow after routing&#39;</span>
+    <span class="n">all_fluxes_info</span><span class="p">[</span><span class="s1">&#39;routb&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;Baseflow flow after routing&#39;</span>    
+
+    <span class="k">return</span> <span class="n">all_fluxes_info</span>  </div>
+
+<div class="viewcode-block" id="all_pars_info"><a class="viewcode-back" href="../../info.html#pyfuse.all_pars_info">[docs]</a><span class="k">def</span> <span class="nf">all_pars_info</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns a print of all possible parameters of all model combinations </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">all_pars_info</span><span class="o">=</span><span class="p">{}</span>
+    <span class="n">all_pars_info</span><span class="p">[</span><span class="s1">&#39;S1max&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;Maximum storage in the upper layer&#39;</span>
+    <span class="n">all_pars_info</span><span class="p">[</span><span class="s1">&#39;S2max&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;Maximum storage in the lower layer &#39;</span>
+    <span class="n">all_pars_info</span><span class="p">[</span><span class="s1">&#39;fitens&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;Fraction total storage as tension storage&#39;</span>
+    <span class="n">all_pars_info</span><span class="p">[</span><span class="s1">&#39;firchr&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;Fraction of tension storage in primary zone (upper layer) &#39;</span>
+    <span class="n">all_pars_info</span><span class="p">[</span><span class="s1">&#39;fibase&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;Fraction of free storage in primary reservoir (lower layer) &#39;</span>
+    <span class="n">all_pars_info</span><span class="p">[</span><span class="s1">&#39;r1&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;Fraction of roots in the upper layer&#39;</span>
+    <span class="n">all_pars_info</span><span class="p">[</span><span class="s1">&#39;ku&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;Percolation rate&#39;</span>
+    <span class="n">all_pars_info</span><span class="p">[</span><span class="s1">&#39;c&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;Percolation exponent in SAC&#39;</span>
+    <span class="n">all_pars_info</span><span class="p">[</span><span class="s1">&#39;alfa&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;Percolation multiplier for the lower layer cfr SAC&#39;</span>
+    <span class="n">all_pars_info</span><span class="p">[</span><span class="s1">&#39;psi&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;Percolation exponent for the lower layer&#39;</span>
+    <span class="n">all_pars_info</span><span class="p">[</span><span class="s1">&#39;kappa&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;Fraction of percolation to tension storage in the lower layer &#39;</span>
+    <span class="n">all_pars_info</span><span class="p">[</span><span class="s1">&#39;ki&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;Interflow rate&#39;</span>
+    <span class="n">all_pars_info</span><span class="p">[</span><span class="s1">&#39;ks&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;Base flow rate&#39;</span>
+    <span class="n">all_pars_info</span><span class="p">[</span><span class="s1">&#39;n&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;Base flow exponent&#39;</span>
+    <span class="n">all_pars_info</span><span class="p">[</span><span class="s1">&#39;v&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;Base flow depletion rate for single reservoir&#39;</span>
+    <span class="n">all_pars_info</span><span class="p">[</span><span class="s1">&#39;vA&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;Base flow depletion rate for primary reservoir&#39;</span>
+    <span class="n">all_pars_info</span><span class="p">[</span><span class="s1">&#39;vB&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;Base flow depletion rate for secondary reservoir&#39;</span>    
+    <span class="n">all_pars_info</span><span class="p">[</span><span class="s1">&#39;Acmax&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;Maximum saturated area (fraction)&#39;</span>    
+    <span class="n">all_pars_info</span><span class="p">[</span><span class="s1">&#39;b&#39;</span><span class="p">]</span><span class="o">=</span> <span class="s1">&#39;ARNO/VIC b exponent&#39;</span>
+    <span class="n">all_pars_info</span><span class="p">[</span><span class="s1">&#39;loglambda&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;Mean of the LOG-transformed topographic index distribution &#39;</span>    
+    <span class="n">all_pars_info</span><span class="p">[</span><span class="s1">&#39;chi&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;Shape parameter defining the topographic index distribution&#39;</span>    
+    <span class="n">all_pars_info</span><span class="p">[</span><span class="s1">&#39;mut&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;Time delay in runoff&#39;</span>
+    <span class="n">all_pars_info</span><span class="p">[</span><span class="s1">&#39;alfah&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;Splitting parameter when modelling hymod model option&#39;</span>
+    <span class="n">all_pars_info</span><span class="p">[</span><span class="s1">&#39;tg&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;Threshold value for groundwater recharge&#39;</span>
+    <span class="n">all_pars_info</span><span class="p">[</span><span class="s1">&#39;tif&#39;</span><span class="p">]</span><span class="o">=</span> <span class="s1">&#39;interflow treshold function&#39;</span>
+    <span class="n">all_pars_info</span><span class="p">[</span><span class="s1">&#39;tof&#39;</span><span class="p">]</span><span class="o">=</span> <span class="s1">&#39;overland flow treshold function&#39;</span>
+    <span class="n">all_pars_info</span><span class="p">[</span><span class="s1">&#39;ko&#39;</span><span class="p">]</span><span class="o">=</span> <span class="s1">&#39;overland flow runoff coefficient&#39;</span>   
+    <span class="n">all_pars_info</span><span class="p">[</span><span class="s1">&#39;timeo&#39;</span><span class="p">]</span><span class="o">=</span> <span class="s1">&#39;overland flow time constant&#39;</span>    
+    <span class="n">all_pars_info</span><span class="p">[</span><span class="s1">&#39;timei&#39;</span><span class="p">]</span><span class="o">=</span> <span class="s1">&#39;interflow flow time constant&#39;</span>
+    <span class="n">all_pars_info</span><span class="p">[</span><span class="s1">&#39;timeb&#39;</span><span class="p">]</span><span class="o">=</span> <span class="s1">&#39;base flow time constant&#39;</span>
+    <span class="n">all_pars_info</span><span class="p">[</span><span class="s1">&#39;nreso&#39;</span><span class="p">]</span><span class="o">=</span> <span class="s1">&#39;overland flow number of reservoirs&#39;</span>    
+    <span class="n">all_pars_info</span><span class="p">[</span><span class="s1">&#39;nresi&#39;</span><span class="p">]</span><span class="o">=</span> <span class="s1">&#39;interflow flow number of reservoirs&#39;</span>
+    <span class="n">all_pars_info</span><span class="p">[</span><span class="s1">&#39;nresb&#39;</span><span class="p">]</span><span class="o">=</span> <span class="s1">&#39;base flow number of reservoirs&#39;</span>
+        
+        
+    <span class="n">all_pars_info</span><span class="p">[</span><span class="s1">&#39;S1Tmax&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;Maximum tension storage in the upper layer (derived)&#39;</span>
+    <span class="n">all_pars_info</span><span class="p">[</span><span class="s1">&#39;S2Tmax&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;Maximum tension storage in the lower layer (derived)&#39;</span>
+    <span class="n">all_pars_info</span><span class="p">[</span><span class="s1">&#39;S1Fmax&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;Maximum free storage in the upper layer (derived)&#39;</span>
+    <span class="n">all_pars_info</span><span class="p">[</span><span class="s1">&#39;S2Fmax&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;Maximum free storage in the lower layer (derived)&#39;</span>
+    <span class="n">all_pars_info</span><span class="p">[</span><span class="s1">&#39;S1TAmax&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;Maximum storage in the primary tension reservoir (derived)&#39;</span>
+    <span class="n">all_pars_info</span><span class="p">[</span><span class="s1">&#39;S1TBmax&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;Maximum storage in the secondary tension reservoir (derived)&#39;</span>
+    <span class="n">all_pars_info</span><span class="p">[</span><span class="s1">&#39;S2FAmax&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;Maximum storage in the primary base flow reservoir (derived)&#39;</span>     
+    <span class="n">all_pars_info</span><span class="p">[</span><span class="s1">&#39;S2FBmax&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;Maximum storage in the secondary base flow reservoir (derived)&#39;</span>         
+    <span class="n">all_pars_info</span><span class="p">[</span><span class="s1">&#39;r2&#39;</span><span class="p">]</span><span class="o">=</span> <span class="s1">&#39;Root fraction in the lower soil layer (derived)&#39;</span>
+    <span class="n">all_pars_info</span><span class="p">[</span><span class="s1">&#39;powlambda&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;Mean of the POWER-transformed topographic index (derived)&#39;</span> 
+    <span class="n">all_pars_info</span><span class="p">[</span><span class="s1">&#39;maxpow&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;max value of power-transformed topographic index, m**(1/n)&#39;</span>
+    <span class="n">all_pars_info</span><span class="p">[</span><span class="s1">&#39;frac_future&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;Fraction of runoff for future timesteps (array!)&#39;</span>
+
+    <span class="c1">#! when sampling    </span>
+    <span class="n">all_pars_info</span><span class="p">[</span><span class="s1">&#39;be&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;Evaporation exponent to differentiate between linear and non-linear dependence&#39;</span>
+    <span class="k">return</span> <span class="n">all_pars_info</span></div>
+
+<span class="k">def</span> <span class="nf">all_cnt_info</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns a print of all constants needed</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">all_cnt_info</span><span class="o">=</span><span class="p">{}</span>
+    <span class="n">all_cnt_info</span><span class="p">[</span><span class="s1">&#39;area&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;Catchment size in square km&#39;</span>
+    <span class="n">all_cnt_info</span><span class="p">[</span><span class="s1">&#39;timestep&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;Time step for the model relative to an hourly timestep&#39;</span> 
+    <span class="k">return</span> <span class="n">all_cnt_info</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2012, S. Van Hoey.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

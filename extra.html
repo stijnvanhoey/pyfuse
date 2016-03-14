@@ -1,0 +1,240 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Extra Functions &mdash; pyfuse 1.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="pyfuse 1.0.1 documentation" href="index.html" />
+    <link rel="next" title="Tutorial" href="example.html" />
+    <link rel="prev" title="Information dictionaries" href="info.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="extra-functions">
+<h1>Extra Functions<a class="headerlink" href="#extra-functions" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="pyfuse.Logistic">
+<code class="descclassname">pyfuse.</code><code class="descname">Logistic</code><span class="sig-paren">(</span><em>State</em>, <em>Statemax</em>, <em>Psmooth=0.01</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyfuse/extrafunctions.html#Logistic"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyfuse.Logistic" title="Permalink to this definition">¶</a></dt>
+<dd><p>Logistic function to smooth the threshold at the overflow of a bucket</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>State: float</strong></p>
+<blockquote>
+<div><p>Current state value</p>
+</div></blockquote>
+<p><strong>Statemax: float</strong></p>
+<blockquote>
+<div><p>Maximum allowed value of the state value</p>
+</div></blockquote>
+<p><strong>Psmooth: float</strong></p>
+<blockquote>
+<div><p>smoothing parameter to choose amount of smoothing default value 0.01</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">logismooth: float</p>
+<blockquote class="last">
+<div><p>smoothing multiplier</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">References</p>
+<p>[1] Clark, Martyn P., A. G. Slater, D. E. Rupp, R. A. Woods, Jasper A. 
+Vrugt, H. V. Gupta, Thorsten Wagener, and L. E. Hay. Framework for
+Understanding Structural Errors (FUSE): A modular framework to diagnose 
+differences between hydrological models. Water Resources Research 44 (2008): 14.
+Original code from Clark, Martyn P.</p>
+<p>[2] Kavetski, Dmitri, and George Kuczera. “Model Smoothing Strategies to 
+Remove Microscale Discontinuities and Spurious Secondary Optima in 
+Objective Functions in Hydrological Calibration.” Water Resources Research 43, no. 3 (March 8, 2007): 1–9. <a class="reference external" href="http://www.agu.org/pubs/crossref/2007/2006WR005195.shtml">http://www.agu.org/pubs/crossref/2007/2006WR005195.shtml</a>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyfuse.calc_meantipow">
+<code class="descclassname">pyfuse.</code><code class="descname">calc_meantipow</code><span class="sig-paren">(</span><em>set_par</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyfuse/extrafunctions.html#calc_meantipow"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyfuse.calc_meantipow" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate mean of power transformed topographic index</p>
+<p>Implementation here is the 3 parameter gamma distribution
+version following [1], with the values for chi, psi and loglambda. 
+In the [2] version, the chi and psi 
+are interchanged and the 1 parameter version is applied</p>
+<p>more info: utilities -&gt; gammadist</p>
+<p>needs par-library as input!</p>
+<p class="rubric">References</p>
+<p>[1] Sivapalan, M., K. Beven, and F Eric Wood. “On Hydrologic Similarity 
+2. A Scaled Model of Storm Runoff Production.” Water Resources Research 
+23, no. 12 (1987): 2266–2278.</p>
+<p>[2] Clark, Martyn P., A. G. Slater, D. E. Rupp, R. A. Woods, Jasper A. 
+Vrugt, H. V. Gupta, Thorsten Wagener, and L. E. Hay. Framework for
+Understanding Structural Errors (FUSE): A modular framework to diagnose 
+differences between hydrological models. Water Resources Research 44 (2008): 14.
+Original code from Clark, Martyn P.</p>
+</dd></dl>
+
+<p>The topographic index distribution is defined by:</p>
+<div class="math">
+\[f(\zeta) = \frac{1}{\chi \Gamma(\phi)} \left( \frac{\zeta-\mu}{\chi}\right) e^{\left( -\frac{\zeta-\mu}{\chi}\right)}\]</div>
+<dl class="function">
+<dt id="pyfuse.qtimedelay">
+<code class="descclassname">pyfuse.</code><code class="descname">qtimedelay</code><span class="sig-paren">(</span><em>set_par</em>, <em>deltim=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyfuse/extrafunctions.html#qtimedelay"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyfuse.qtimedelay" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gamma-function based weight function to control the runoff delay, this
+function calculates the fractions to derive the fluxes, defined by the
+frac_future parameter</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>set_par: dict</strong></p>
+<blockquote>
+<div><p>The dictionary with the model parameters</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">set_par: dict</p>
+<blockquote class="last">
+<div><p>updated dictionary with the frac_future parameter added</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyfuse.linres">
+<code class="descclassname">pyfuse.</code><code class="descname">linres</code><span class="sig-paren">(</span><em>n_res</em>, <em>q_init</em>, <em>co</em>, <em>k</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyfuse/extrafunctions.html#linres"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyfuse.linres" title="Permalink to this definition">¶</a></dt>
+<dd><p>Recursive calculation of a cascade of linear reservoirs, with fluxes
+defined in mm</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>n_res: int</strong></p>
+<blockquote>
+<div><p>number of reservoirs in the cascade</p>
+</div></blockquote>
+<p><strong>q_init: narray</strong></p>
+<blockquote>
+<div><p>initial fluxes of the different reservoirs in array</p>
+</div></blockquote>
+<p><strong>co: float</strong></p>
+<blockquote>
+<div><p>incoming flow</p>
+</div></blockquote>
+<p><strong>k: float</strong></p>
+<blockquote>
+<div><p>residence time constant for the reservoir</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">q_init: narray</p>
+<blockquote>
+<div><p>narray with the new fluxes ofr each reservoir</p>
+</div></blockquote>
+<p class="last">TODO: improve by incorporating previous timestep incoming flow</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyfuse.linresv">
+<code class="descclassname">pyfuse.</code><code class="descname">linresv</code><span class="sig-paren">(</span><em>n_res</em>, <em>q_init</em>, <em>co</em>, <em>v</em>, <em>k</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyfuse/extrafunctions.html#linresv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyfuse.linresv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Recursive calculation of a cascade of linear reservoirs, with incoming
+fluxes defined in mm and outgoing flow in m3/s</p>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><code class="xref py py-obj docutils literal"><span class="pre">pyFUSE.linres</span></code></p>
+</div>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="info.html" title="previous chapter">Information dictionaries</a></li>
+      <li>Next: <a href="example.html" title="next chapter">Tutorial</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/extra.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2012, S. Van Hoey.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/extra.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

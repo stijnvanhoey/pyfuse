@@ -1,0 +1,328 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pyfuse.modelsetup &mdash; pyfuse 1.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="pyfuse 1.0.1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for pyfuse.modelsetup</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on Wed Oct 10 16:51:28 2012</span>
+
+<span class="sd">@author: VHOEYS</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">pprint</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">infodicts</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">parameter</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">extrafunctions</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="c1">###############################################################################</span>
+<span class="c1">###   START-UP FUNCTIONS TO SELECT MODELS/PARS FOR CREATING MODEL STRUCTURE</span>
+<span class="c1">###############################################################################</span>
+
+<div class="viewcode-block" id="Set_options"><a class="viewcode-back" href="../../setup.html#pyfuse.Set_options">[docs]</a><span class="k">def</span> <span class="nf">Set_options</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span><span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Read options from file or if no file take standard implemented here</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    -----------</span>
+<span class="sd">    filename: str</span>
+<span class="sd">        name of the Options containing file, following the given template</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    ----------</span>
+<span class="sd">    Dictionary, used to set-up the model structure</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">filename</span><span class="o">==</span><span class="bp">False</span><span class="p">:</span>
+        <span class="n">Options</span><span class="o">=</span><span class="p">{}</span>
+        <span class="n">f</span><span class="o">=</span><span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span><span class="s1">&#39;r&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">line</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">==</span><span class="s1">&#39;#&#39;</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+                <span class="n">optioninputs</span><span class="o">=</span><span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">r&#39;\s+&#39;</span><span class="p">,</span><span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">optioninputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="n">all_options</span><span class="p">():</span>
+                    <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;Option name is not matching one of the FUSE model decisions,</span><span class="se">\</span>
+<span class="s1">                                    information in all_options()&#39;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">optioninputs</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="ow">in</span> <span class="n">all_options</span><span class="p">()[</span><span class="n">optioninputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]]:</span>
+                    <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;Model option value is not matching one of the FUSE option values,</span><span class="se">\</span>
+<span class="s1">                                    information in all_options()&#39;</span><span class="p">)</span>
+                <span class="n">Options</span><span class="p">[</span><span class="n">optioninputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">=</span><span class="n">optioninputs</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="n">Options</span><span class="p">[</span><span class="s1">&#39;soilstorage&#39;</span><span class="p">]</span><span class="o">=</span> <span class="s1">&#39;twolayer&#39;</span>
+        <span class="c1">#to delete, but still old version</span>
+        <span class="n">Options</span><span class="p">[</span><span class="s1">&#39;reservoirs&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;220&#39;</span> <span class="c1">#TODO veranderen!!!</span>
+
+    <span class="k">elif</span> <span class="ow">not</span> <span class="n">default</span><span class="o">==</span><span class="bp">False</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">default</span> <span class="o">==</span> <span class="s1">&#39;NAM&#39;</span><span class="p">:</span>
+            <span class="k">print</span> <span class="s1">&#39;NAM model options are selected&#39;</span>
+            <span class="n">Options</span><span class="o">=</span><span class="p">{}</span>
+
+            <span class="c1">#NAM-STYLE</span>
+            <span class="n">Options</span><span class="p">[</span><span class="s1">&#39;soilstorage&#39;</span><span class="p">]</span><span class="o">=</span> <span class="s1">&#39;twolayer&#39;</span><span class="c1">#FIXED OPTION: ALWAYS ON!!</span>
+            <span class="n">Options</span><span class="p">[</span><span class="s1">&#39;uplayer&#39;</span><span class="p">]</span><span class="o">=</span> <span class="s1">&#39;surface1_1&#39;</span><span class="c1">#&#39;#&#39;onestate_1&#39;#&#39;surface1_1&#39;</span>
+            <span class="n">Options</span><span class="p">[</span><span class="s1">&#39;lowlayer_baseflow&#39;</span><span class="p">]</span><span class="o">=</span> <span class="s1">&#39;unlimfrc_2&#39;</span>
+            <span class="n">Options</span><span class="p">[</span><span class="s1">&#39;surface&#39;</span><span class="p">]</span><span class="o">=</span> <span class="s1">&#39;oflwtresh&#39;</span>
+            <span class="n">Options</span><span class="p">[</span><span class="s1">&#39;percolation&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;perc_tresh&#39;</span>
+            <span class="n">Options</span><span class="p">[</span><span class="s1">&#39;evaporation&#39;</span><span class="p">]</span><span class="o">=</span> <span class="s1">&#39;sequential&#39;</span>
+            <span class="n">Options</span><span class="p">[</span><span class="s1">&#39;interflow&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;intflwtresh&#39;</span>
+            <span class="n">Options</span><span class="p">[</span><span class="s1">&#39;routing&#39;</span><span class="p">]</span><span class="o">=</span> <span class="s1">&#39;rout_ind&#39;</span> <span class="c1">#linear</span>
+            <span class="n">Options</span><span class="p">[</span><span class="s1">&#39;reservoirs&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;220&#39;</span> <span class="c1">#only when routing is selected</span>
+
+        <span class="k">elif</span> <span class="n">default</span> <span class="o">==</span> <span class="s1">&#39;PDM&#39;</span><span class="p">:</span>
+            <span class="k">print</span> <span class="s1">&#39;PDM model options are selected&#39;</span>
+
+            <span class="n">Options</span><span class="o">=</span><span class="p">{}</span>
+            <span class="n">Options</span><span class="p">[</span><span class="s1">&#39;soilstorage&#39;</span><span class="p">]</span><span class="o">=</span> <span class="s1">&#39;twolayer&#39;</span>
+            <span class="n">Options</span><span class="p">[</span><span class="s1">&#39;uplayer&#39;</span><span class="p">]</span><span class="o">=</span> <span class="s1">&#39;onestate_1&#39;</span><span class="c1">#&#39;#&#39;onestate_1&#39;#&#39;surface1_1&#39;</span>
+            <span class="n">Options</span><span class="p">[</span><span class="s1">&#39;lowlayer_baseflow&#39;</span><span class="p">]</span><span class="o">=</span> <span class="s1">&#39;unlimfrc_2&#39;</span>
+            <span class="n">Options</span><span class="p">[</span><span class="s1">&#39;surface&#39;</span><span class="p">]</span><span class="o">=</span> <span class="s1">&#39;arno_x_vic&#39;</span>
+            <span class="n">Options</span><span class="p">[</span><span class="s1">&#39;percolation&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;perc_w2sat&#39;</span>
+            <span class="n">Options</span><span class="p">[</span><span class="s1">&#39;evaporation&#39;</span><span class="p">]</span><span class="o">=</span> <span class="s1">&#39;sequential&#39;</span>
+            <span class="n">Options</span><span class="p">[</span><span class="s1">&#39;interflow&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;intflwnone&#39;</span>
+            <span class="n">Options</span><span class="p">[</span><span class="s1">&#39;routing&#39;</span><span class="p">]</span><span class="o">=</span> <span class="s1">&#39;rout_ind&#39;</span> <span class="c1">#linear</span>
+            <span class="n">Options</span><span class="p">[</span><span class="s1">&#39;reservoirs&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;200&#39;</span> <span class="c1">#HERWERKING: 0111 (alle deelstromen) of 1000 (volledig op totaal) =&gt; wel par geworden!!</span>
+
+        <span class="k">elif</span> <span class="n">default</span> <span class="o">==</span> <span class="s1">&#39;Hymod&#39;</span><span class="p">:</span>
+            <span class="n">Options</span><span class="o">=</span><span class="p">{}</span>
+            <span class="n">Options</span><span class="p">[</span><span class="s1">&#39;soilstorage&#39;</span><span class="p">]</span><span class="o">=</span> <span class="s1">&#39;twolayer&#39;</span>
+            <span class="n">Options</span><span class="p">[</span><span class="s1">&#39;uplayer&#39;</span><span class="p">]</span><span class="o">=</span> <span class="s1">&#39;onestate_1&#39;</span><span class="c1">#&#39;#&#39;onestate_1&#39;#&#39;surface1_1&#39;</span>
+            <span class="n">Options</span><span class="p">[</span><span class="s1">&#39;lowlayer_baseflow&#39;</span><span class="p">]</span><span class="o">=</span> <span class="s1">&#39;unlimfrc_2&#39;</span>
+            <span class="n">Options</span><span class="p">[</span><span class="s1">&#39;surface&#39;</span><span class="p">]</span><span class="o">=</span> <span class="s1">&#39;arno_x_vic&#39;</span>
+            <span class="n">Options</span><span class="p">[</span><span class="s1">&#39;percolation&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;perc_nodrain&#39;</span>
+            <span class="n">Options</span><span class="p">[</span><span class="s1">&#39;evaporation&#39;</span><span class="p">]</span><span class="o">=</span> <span class="s1">&#39;sequential&#39;</span>
+            <span class="n">Options</span><span class="p">[</span><span class="s1">&#39;interflow&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;intflwnone&#39;</span>
+            <span class="n">Options</span><span class="p">[</span><span class="s1">&#39;routing&#39;</span><span class="p">]</span><span class="o">=</span> <span class="s1">&#39;rout_ind&#39;</span> <span class="c1">#linear</span>
+            <span class="n">Options</span><span class="p">[</span><span class="s1">&#39;reservoirs&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;300&#39;</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;NAM, PDM and hymod are the default model structures&#39;</span><span class="p">)</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;use default structure name or give options file&#39;</span><span class="p">)</span>
+
+    <span class="k">print</span> <span class="s1">&#39;The selected options are&#39;</span>
+    <span class="n">pprint</span><span class="o">.</span><span class="n">pprint</span><span class="p">(</span><span class="n">Options</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">Options</span></div>
+
+<div class="viewcode-block" id="Set_pars"><a class="viewcode-back" href="../../setup.html#pyfuse.Set_pars">[docs]</a><span class="k">def</span> <span class="nf">Set_pars</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Read info from file and put in parameter dictionary</span>
+<span class="sd">    and calculate derived parameter values</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ------------</span>
+<span class="sd">    filename: str</span>
+<span class="sd">        name of the parameters containing file, following the given template</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    ----------</span>
+<span class="sd">    Dictionary, used to parameterize the model structure</span>
+
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">set_par</span><span class="o">=</span><span class="p">{}</span>
+
+    <span class="c1">#READ FILE and match the pars in the general oveview</span>
+    <span class="n">f</span><span class="o">=</span><span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span><span class="s1">&#39;r&#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">():</span>
+<span class="c1">#        print line</span>
+<span class="c1">#    for line in fileinput.input([filename]):</span>
+        <span class="k">if</span> <span class="n">line</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">==</span><span class="s1">&#39;#&#39;</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+            <span class="n">parinputs</span><span class="o">=</span><span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">r&#39;\s+&#39;</span><span class="p">,</span><span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">parinputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="n">all_pars_info</span><span class="p">():</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;Parameter name is not matching one of the FUSE parameter names,</span><span class="se">\</span>
+<span class="s1">                                information in all_pars_info()&#39;</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">parmin</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">(</span><span class="n">parinputs</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                <span class="n">parmax</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">(</span><span class="n">parinputs</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+                <span class="n">paroptguess</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">(</span><span class="n">parinputs</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+
+            <span class="k">except</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;Parameter </span><span class="si">%s</span><span class="s1"> in input file not well defined&#39;</span><span class="o">%</span><span class="n">parinputs</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">parinputs</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;randomUniform&#39;</span><span class="p">,</span> <span class="s1">&#39;randomTriangular&#39;</span><span class="p">,</span> <span class="s1">&#39;randomTrapezoidal&#39;</span><span class="p">,</span> <span class="s1">&#39;randomNormal&#39;</span><span class="p">,</span> <span class="s1">&#39;randomLogNormal&#39;</span><span class="p">]:</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;selected distribution not available&#39;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">parinputs</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;randomUniform&#39;</span><span class="p">]:</span>
+                <span class="n">set_par</span><span class="p">[</span><span class="n">parinputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">=</span><span class="n">ModPar</span><span class="p">(</span><span class="n">parinputs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">parmin</span><span class="p">,</span><span class="n">parmax</span><span class="p">,</span><span class="n">paroptguess</span><span class="p">,</span><span class="n">parinputs</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span>
+            <span class="k">elif</span> <span class="n">parinputs</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;randomTriangular&#39;</span><span class="p">]:</span>
+                <span class="n">set_par</span><span class="p">[</span><span class="n">parinputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">=</span><span class="n">ModPar</span><span class="p">(</span><span class="n">parinputs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">parmin</span><span class="p">,</span><span class="n">parmax</span><span class="p">,</span><span class="n">paroptguess</span><span class="p">,</span><span class="n">parinputs</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">(</span><span class="n">parinputs</span><span class="p">[</span><span class="mi">5</span><span class="p">]))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">set_par</span><span class="p">[</span><span class="n">parinputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">=</span><span class="n">ModPar</span><span class="p">(</span><span class="n">parinputs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">parmin</span><span class="p">,</span><span class="n">parmax</span><span class="p">,</span><span class="n">paroptguess</span><span class="p">,</span><span class="n">parinputs</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">(</span><span class="n">parinputs</span><span class="p">[</span><span class="mi">5</span><span class="p">]),</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">(</span><span class="n">parinputs</span><span class="p">[</span><span class="mi">6</span><span class="p">]))</span>
+
+            <span class="c1">#            set_par[parinputs[0]]=ModPar(parinputs[0],parmin,parmax,paroptguess,parinputs[4])</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">set_par</span></div>
+
+<div class="viewcode-block" id="Set_pars_for_run"><a class="viewcode-back" href="../../setup.html#pyfuse.Set_pars_for_run">[docs]</a><span class="k">def</span> <span class="nf">Set_pars_for_run</span><span class="p">(</span><span class="n">Parlib</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Retrieve optguess values of parameters to calculate a simulation</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ------------</span>
+<span class="sd">    Parlib: dict</span>
+<span class="sd">        Dictionary containing the parameter characteristics, with distribution</span>
+<span class="sd">        and extra information</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    --------</span>
+<span class="sd">    pars: dict</span>
+<span class="sd">        Dictionary with parnames and their repsective values to simulate</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">pars</span><span class="o">=</span><span class="p">{}</span>
+    <span class="k">for</span> <span class="n">par</span> <span class="ow">in</span> <span class="n">Parlib</span><span class="o">.</span><span class="n">iterkeys</span><span class="p">():</span>
+        <span class="n">pars</span><span class="p">[</span><span class="n">par</span><span class="p">]</span><span class="o">=</span><span class="n">Parlib</span><span class="p">[</span><span class="n">par</span><span class="p">]</span><span class="o">.</span><span class="n">optguess</span>
+    <span class="n">Derived_pars</span><span class="p">(</span><span class="n">pars</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">pars</span></div>
+
+<span class="k">def</span> <span class="nf">Derived_pars</span><span class="p">(</span><span class="n">set_par_lib</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Help function to calculate parameters derived by the given par values</span>
+<span class="sd">    calculated and added to the library</span>
+
+<span class="sd">    When performing Monte Carlo, needs to be recalculated each time</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">set_par_lib</span><span class="p">[</span><span class="s1">&#39;S1Tmax&#39;</span><span class="p">]</span><span class="o">=</span><span class="n">set_par_lib</span><span class="p">[</span><span class="s1">&#39;S1max&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">set_par_lib</span><span class="p">[</span><span class="s1">&#39;fitens&#39;</span><span class="p">]</span>  <span class="c1">#bucketsize file</span>
+    <span class="n">set_par_lib</span><span class="p">[</span><span class="s1">&#39;S2Tmax&#39;</span><span class="p">]</span><span class="o">=</span><span class="n">set_par_lib</span><span class="p">[</span><span class="s1">&#39;S2max&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">set_par_lib</span><span class="p">[</span><span class="s1">&#39;fitens&#39;</span><span class="p">]</span>
+    <span class="n">set_par_lib</span><span class="p">[</span><span class="s1">&#39;S1Fmax&#39;</span><span class="p">]</span><span class="o">=</span><span class="n">set_par_lib</span><span class="p">[</span><span class="s1">&#39;S1max&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.</span><span class="o">-</span><span class="n">set_par_lib</span><span class="p">[</span><span class="s1">&#39;fitens&#39;</span><span class="p">])</span>
+    <span class="n">set_par_lib</span><span class="p">[</span><span class="s1">&#39;S2Fmax&#39;</span><span class="p">]</span><span class="o">=</span><span class="n">set_par_lib</span><span class="p">[</span><span class="s1">&#39;S2max&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.</span><span class="o">-</span><span class="n">set_par_lib</span><span class="p">[</span><span class="s1">&#39;fitens&#39;</span><span class="p">])</span>
+    <span class="n">set_par_lib</span><span class="p">[</span><span class="s1">&#39;S1TAmax&#39;</span><span class="p">]</span><span class="o">=</span><span class="n">set_par_lib</span><span class="p">[</span><span class="s1">&#39;S1Tmax&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">set_par_lib</span><span class="p">[</span><span class="s1">&#39;firchr&#39;</span><span class="p">]</span>
+    <span class="n">set_par_lib</span><span class="p">[</span><span class="s1">&#39;S1TBmax&#39;</span><span class="p">]</span><span class="o">=</span><span class="n">set_par_lib</span><span class="p">[</span><span class="s1">&#39;S1Tmax&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.</span><span class="o">-</span><span class="n">set_par_lib</span><span class="p">[</span><span class="s1">&#39;firchr&#39;</span><span class="p">])</span>
+    <span class="n">set_par_lib</span><span class="p">[</span><span class="s1">&#39;S2FAmax&#39;</span><span class="p">]</span><span class="o">=</span><span class="n">set_par_lib</span><span class="p">[</span><span class="s1">&#39;S2Fmax&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">set_par_lib</span><span class="p">[</span><span class="s1">&#39;fibase&#39;</span><span class="p">]</span>
+    <span class="n">set_par_lib</span><span class="p">[</span><span class="s1">&#39;S2FBmax&#39;</span><span class="p">]</span><span class="o">=</span><span class="n">set_par_lib</span><span class="p">[</span><span class="s1">&#39;S2Fmax&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.</span><span class="o">-</span><span class="n">set_par_lib</span><span class="p">[</span><span class="s1">&#39;fibase&#39;</span><span class="p">])</span>
+    <span class="n">set_par_lib</span><span class="p">[</span><span class="s1">&#39;r2&#39;</span><span class="p">]</span><span class="o">=</span><span class="mf">1.</span> <span class="o">-</span> <span class="n">set_par_lib</span><span class="p">[</span><span class="s1">&#39;r1&#39;</span><span class="p">]</span>
+
+<span class="c1">#    set_par_lib[&#39;Smax&#39;]= set_par_lib[&#39;S1max&#39;]  #Smax gets max from value S1max</span>
+    <span class="c1">#calculate mean of power transformed topographic index</span>
+    <span class="n">set_par_lib</span> <span class="o">=</span> <span class="n">calc_meantipow</span><span class="p">(</span><span class="n">set_par_lib</span><span class="p">)</span>  <span class="c1">#adds 2 parameters!</span>
+    <span class="n">set_par_lib</span> <span class="o">=</span> <span class="n">qtimedelay</span><span class="p">(</span><span class="n">set_par_lib</span><span class="p">,</span><span class="n">deltim</span><span class="o">=</span><span class="mf">1.</span><span class="p">)</span>
+    <span class="c1">#TODO: fracfuture for gamma-runoff</span>
+    <span class="k">return</span> <span class="n">set_par_lib</span>
+
+<div class="viewcode-block" id="Set_cnts"><a class="viewcode-back" href="../../setup.html#pyfuse.Set_cnts">[docs]</a><span class="k">def</span> <span class="nf">Set_cnts</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Read info from file and put in constants dictionary</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ------------</span>
+<span class="sd">    filename: str</span>
+<span class="sd">        name of the constants containing file, following the given template</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    ----------</span>
+<span class="sd">    Dictionary, used to simulate the model</span>
+
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="n">filename</span><span class="p">:</span>
+        <span class="n">const</span><span class="o">=</span><span class="p">{}</span>
+        <span class="n">f</span><span class="o">=</span><span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span><span class="s1">&#39;r&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">line</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">==</span><span class="s1">&#39;#&#39;</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+                <span class="n">ctninputs</span><span class="o">=</span><span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">r&#39;\s+&#39;</span><span class="p">,</span><span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+                <span class="k">print</span> <span class="n">ctninputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">ctninputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="n">all_cnt_info</span><span class="p">():</span>
+                    <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;constant name is not matching one of the FUSE model constants,</span><span class="se">\</span>
+<span class="s1">                                    information in all_cnt_info()&#39;</span><span class="p">)</span>
+                <span class="n">const</span><span class="p">[</span><span class="n">ctninputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">(</span><span class="n">ctninputs</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">const</span><span class="o">=</span><span class="p">{}</span>
+        <span class="n">const</span><span class="p">[</span><span class="s1">&#39;area&#39;</span><span class="p">]</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">(</span><span class="mf">362.</span><span class="p">)</span>
+        <span class="n">const</span><span class="p">[</span><span class="s1">&#39;timestep&#39;</span><span class="p">]</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span>    <span class="c1">#relative to the frequency of the rain input</span>
+    <span class="k">return</span> <span class="n">const</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2012, S. Van Hoey.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
