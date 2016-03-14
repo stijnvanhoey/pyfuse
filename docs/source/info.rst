@@ -1,10 +1,10 @@
 Information dictionaries
 =========================
-   
-.. autofunction:: pyFUSE.all_options
 
-.. autofunction:: pyFUSE.all_states
+.. autofunction:: pyfuse.all_options
 
-.. autofunction:: pyFUSE.all_fluxes
+.. autofunction:: pyfuse.all_states
 
-.. autofunction:: pyFUSE.all_pars_info
+.. autofunction:: pyfuse.all_fluxes
+
+.. autofunction:: pyfuse.all_pars_info

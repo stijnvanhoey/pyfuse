@@ -1,12 +1,12 @@
 Probability distribution function handling
 ==========================================
-   
-.. autofunction:: pyFUSE.randomUniform
 
-.. autofunction:: pyFUSE.randomTriangular
+.. autofunction:: pyfuse.randomUniform
 
-.. autofunction:: pyFUSE.randomTrapezoidal
+.. autofunction:: pyfuse.randomTriangular
 
-.. autofunction:: pyFUSE.randomNormal
+.. autofunction:: pyfuse.randomTrapezoidal
 
-.. autofunction:: pyFUSE.randomLogNormal
+.. autofunction:: pyfuse.randomNormal
+
+.. autofunction:: pyfuse.randomLogNormal

@@ -5,7 +5,7 @@ Created on Wed Oct 10 16:49:56 2012
 @author: VHOEYS
 """
 
-from pyFUSE.extrafunctions import *
+from pyfuse.extrafunctions import *
 
 ###############################################################################
 ###   FLUXES OF THE MODEL

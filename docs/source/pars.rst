@@ -1,9 +1,9 @@
 Model Parameters
 ================
- 
-.. autoclass:: pyFUSE.ModPar
-   :members:
-   
-.. autofunction:: pyFUSE.reScale 
 
-.. autofunction:: pyFUSE.Sobol
+.. autoclass:: pyfuse.ModPar
+   :members:
+
+.. autofunction:: pyfuse.reScale
+
+.. autofunction:: pyfuse.Sobol

@@ -34,10 +34,10 @@ except:
     odespy_import = False
     print("Odespy was not found, ODE integration is limited to 'odeint'!")
 
-from pyFUSE.distributions import *
-from pyFUSE.fluxes import *
-from pyFUSE.modelsetup import *
-from pyFUSE.parameter import *
+from pyfuse.distributions import *
+from pyfuse.fluxes import *
+from pyfuse.modelsetup import *
+from pyfuse.parameter import *
 
 ###############################################################################
 ###   MODEL ENVIRONMENT

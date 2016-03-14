@@ -10,10 +10,6 @@ import pprint
 
 import numpy as np
 
-#from pyFUSE.infodicts import *
-#from pyFUSE.parameter import *
-#from pyFUSE.extrafunctions import *
-
 from infodicts import *
 from parameter import *
 from extrafunctions import *

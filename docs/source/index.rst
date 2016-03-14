@@ -9,7 +9,6 @@ Welcome to the pyfuse documentation
 Contents:
 
 
-
 .. toctree::
    :maxdepth: 2
 
