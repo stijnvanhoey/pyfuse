@@ -171,4 +171,4 @@ References
 ^^^^^^^^^^^^
 
 .. [1] DHI. MIKE 11, A Modelling System for Rivers and Channels, Reference Manual. Horsholm, Denmark: DHI Water & Environment, 2008.
-.. [2] Moore, R J. The PDM Rainfall-runoff Model. Hydrology and Earth System Sciences 11, no. 1 (2007): 483–499.
+.. [2] Moore, R J. The PDM Rainfall-runoff Model. Hydrology and Earth System Sciences 11, no. 1 (2007): 483-499.
