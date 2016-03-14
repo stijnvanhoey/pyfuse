@@ -1,4 +1,4 @@
-# extensions to ignore #
+#extensions to ignore #
 #######################
 *.pyc
 *.hdf5
@@ -68,3 +68,5 @@ docs/_build/
 
 # PyBuilder
 target/
+
+*.png
