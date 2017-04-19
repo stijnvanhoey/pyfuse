@@ -1,4 +1,7 @@
 # pyFUSE
+
+(no longer maintained)
+
 Python package for creating and running lumped hydrological models, inspired by the paper 
 **Framework for Understanding Structural Errors (FUSE): A modular framework to diagnose differences between hydrological models** by Clark M. P. et al.
 
